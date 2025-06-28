@@ -18,13 +18,13 @@
       <h3>Select Network</h3>
 
       <div class="network" onclick="selectedNetwork(this)">
-        <img src="https://i.imgur.com/nqB32k8.png" alt="MTN" data-network="MTN" />
+        <img src="https://i.imgur.com/nqB32k8.png" alt="MTN" data-network="mtn" />
       </div>
       <div class="network" onclick="selectedNetwork(this)">
-        <img src="https://i.imgur.com/FXvtyZZ.png" alt="Airtel" data-network="Airtel" />
+        <img src="https://i.imgur.com/FXvtyZZ.png" alt="Airtel" data-network="airtel" />
       </div>
       <div class="network" onclick="selectedNetwork(this)">
-        <img src="https://i.imgur.com/mgjfAJr.jpeg" alt="Glo" data-network="Glo" />
+        <img src="https://i.imgur.com/mgjfAJr.jpeg" alt="Glo" data-network="glo" />
       </div>
       <div class="network" onclick="selectedNetwork(this)">
         <img src="https://i.imgur.com/XKy0ckO.jpeg" alt="9mobile" data-network="9mobile" />
@@ -48,7 +48,6 @@
   import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
-  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
     authDomain: "freenium-data001.firebaseapp.com",
@@ -62,13 +61,11 @@
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // 👇 Make selectedNetwork globally accessible again
   window.selectedNetwork = function(divElement) {
     const networks = document.querySelectorAll('.network');
     networks.forEach(net => net.classList.remove('selected'));
     divElement.classList.add('selected');
-    const img = divElement.querySelector('img');
-    const selected = img.getAttribute('data-network');
+    const selected = divElement.querySelector('img').dataset.network;
     document.getElementById('selectedNetwork').value = selected;
     console.log("✅ Network Selected:", selected);
   };
@@ -81,12 +78,10 @@
   }
 
   window.addEventListener("DOMContentLoaded", () => {
-    const buyBtn = document.getElementById("buyBtn");
-
-    buyBtn.addEventListener("click", async (e) => {
+    document.getElementById("buyBtn").addEventListener("click", async (e) => {
       e.preventDefault();
 
-      const selectedNetwork = document.getElementById("selectedNetwork").value.toLowerCase();
+      const selectedNetwork = document.getElementById("selectedNetwork").value;
       const userPhone = document.getElementById("phone").value.trim();
       const purchaseAmount = document.getElementById("amount").value;
 
@@ -102,7 +97,7 @@
         }
 
         const requestId = `airtime_${user.uid}_${selectedNetwork}_${userPhone}_${Date.now()}`;
-        const API_KEY = "6ec6975c371ec9c4236c085fff911c3fdfea3570c41ed7d5668ddb1cab352895"; // 🔐 Replace this with yours
+        const API_KEY = "6ec6975c371ec9c4236c085fff911c3fdfea3570c41ed7d5668ddb1cab352895";
 
         try {
           await addDoc(collection(db, "transactions"), {
