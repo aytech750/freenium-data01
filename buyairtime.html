@@ -1,53 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">  
-  <head>
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Buy Airtime- FREENIUM DATA</title>
+  <title>Buy Airtime - FREENIUM DATA</title>
   <link rel="stylesheet" href="data.css" />
-   <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
 </head>
 <body>
   <div id="globalSpinner" class="hidden">
-  <img src="https://i.imgur.com/KTBvgla.png" alt="Loading..." />
-</div>
-
-<section class="buy-data-section">
-  <div class="data-container">
-  <h2>Buy Airtime</h2>
-  <h3>Select Network</h3>
-
-  <div class="network" onclick="selectedNetwork(this)">
-    <img src="https://i.imgur.com/nqB32k8.png" alt="MTN" data-network="MTN" />
+    <img src="https://i.imgur.com/KTBvgla.png" alt="Loading..." />
   </div>
 
-  <div class="network" onclick="selectedNetwork(this)">
-    <img src="https://i.imgur.com/FXvtyZZ.png" alt="Airtel" data-network="Airtel" />
-  </div>
+  <section class="buy-data-section">
+    <div class="data-container">
+      <h2>Buy Airtime</h2>
+      <h3>Select Network</h3>
 
-  <div class="network" onclick="selectedNetwork(this)">
-    <img src="https://i.imgur.com/mgjfAJr.jpeg" alt="Glo" data-network="Glo" />
-  </div>
+      <div class="network" onclick="selectedNetwork(this)">
+        <img src="https://i.imgur.com/nqB32k8.png" alt="MTN" data-network="MTN" />
+      </div>
+      <div class="network" onclick="selectedNetwork(this)">
+        <img src="https://i.imgur.com/FXvtyZZ.png" alt="Airtel" data-network="Airtel" />
+      </div>
+      <div class="network" onclick="selectedNetwork(this)">
+        <img src="https://i.imgur.com/mgjfAJr.jpeg" alt="Glo" data-network="Glo" />
+      </div>
+      <div class="network" onclick="selectedNetwork(this)">
+        <img src="https://i.imgur.com/XKy0ckO.jpeg" alt="9mobile" data-network="9mobile" />
+      </div>
 
-  <div class="network" onclick="selectedNetwork(this)">
-    <img src="https://i.imgur.com/XKy0ckO.jpeg" alt="9mobile" data-network="9mobile" />
-  </div>
+      <input type="hidden" id="selectedNetwork">
+    </div>
 
-  <!-- Hidden input to store the selected value -->
-  <input type="hidden" id="selectedNetwork">
-</div>
     <form id="airtime-form">
       <input type="tel" id="phone" placeholder="Enter Phone Number" required />
       <input type="number" id="amount" placeholder="Enter Amount (₦)" required />
-
-     <button id="buyBtn">Buy Now</button>
-
+      <button id="buyBtn">Buy Now</button>
       <a href="dashboard.html" class="back-arrow">&lt; PREVIOUS</a>
     </form>
 
     <div id="toast" class="toast">Transaction Successful</div>
-  </div>
-</section>
+  </section>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
@@ -63,12 +58,28 @@
     appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
   };
 
-  // Init Firebase
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // 👇 Airtime handler
+  // 👇 Make selectedNetwork globally accessible again
+  window.selectedNetwork = function(divElement) {
+    const networks = document.querySelectorAll('.network');
+    networks.forEach(net => net.classList.remove('selected'));
+    divElement.classList.add('selected');
+    const img = divElement.querySelector('img');
+    const selected = img.getAttribute('data-network');
+    document.getElementById('selectedNetwork').value = selected;
+    console.log("✅ Network Selected:", selected);
+  };
+
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 3000);
+  }
+
   window.addEventListener("DOMContentLoaded", () => {
     const buyBtn = document.getElementById("buyBtn");
 
@@ -91,10 +102,9 @@
         }
 
         const requestId = `airtime_${user.uid}_${selectedNetwork}_${userPhone}_${Date.now()}`;
-        const API_KEY = "6ec6975c371ec9c4236c085fff911c3fdfea3570c41ed7d5668ddb1cab352895"; // 🔐 replace this with your real key
+        const API_KEY = "6ec6975c371ec9c4236c085fff911c3fdfea3570c41ed7d5668ddb1cab352895"; // 🔐 Replace this with yours
 
         try {
-          // Save to Firebase
           await addDoc(collection(db, "transactions"), {
             uid: user.uid,
             type: "airtime",
@@ -106,7 +116,6 @@
             createdAt: serverTimestamp()
           });
 
-          // Make Simhost Airtime API call
           const response = await fetch("https://simhostng.com/api/airtime", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
