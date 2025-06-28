@@ -1,0 +1,88 @@
+.referral-section {
+  background: #111827;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.referral-container {
+  background: #1f2937;
+  padding: 30px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.referral-container h2 {
+  color: #00b96b;
+  margin-bottom: 20px;
+}
+
+.referral-code-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #273444;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+.referral-code-box input {
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  width: 100%;
+  outline: none;
+}
+
+.referral-code-box button {
+  background: #00b96b;
+  color: #fff;
+  border: none;
+  padding: 8px 15px;
+  margin-left: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.referral-note {
+  margin: 15px 0;
+  font-size: 14px;
+}
+
+.referral-stats {
+  margin-top: 20px;
+  background: #374151;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.referral-stats p {
+  margin: 0;
+  font-size: 14px;
+  color: #ccc;
+}
+
+.referral-stats h3 {
+  margin-top: 5px;
+  font-size: 28px;
+  color: #00b96b;
+}
+
+a {
+  display: block;
+  margin-top: 20px;
+  color: yellow;
+  text-align: center;
+  text-decoration: none;
+}
+
+a:hover {
+  color: greenyellow;
+}

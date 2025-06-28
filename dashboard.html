@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FREENIUM DATA Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+   <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+</head>
+  <body>
+<div id="globalSpinner">
+  <img src="https://i.imgur.com/KTBvgla.png" alt="Loading...">
+</div>
+  <!-- Header -->
+  <header>
+  <div id="menuIcon" class="menu-icon">☰</div>
+  <h1 class="logo">FREENIUM DATA</h1>
+  <a href="setting.html" class="settings-icon" title="Profile Settings">
+    <i class="fas fa-cog"></i>
+  </a>
+</header>
+<!-- Sidebar Menu -->
+<nav id="sideMenu" class="sidebar">
+  <div id="closeIcon" class="close-icon">✖</div>
+  <ul>
+    <li><a href="dashboard.html">Home</a></li>
+    <li><a href="buyairtime.html">Buy Airtime</a></li>
+    <li><a href="buydata.html">Buy Data</a></li>
+    <li><a href="profile.html">Profile</a></li>
+    <li><a href="reward.html">Rewards</a></li>
+    <li><a href="referrals.html">Referrals</a></li>
+    <li><a href="about.html">About Us</a></li>
+    <li><a href="contact.html">Contact Us</a></li>
+     <li>
+      <button onclick="logout()" style="background: none; border: none; color: red; cursor: pointer;">
+        Logout
+      </button>
+    </li>
+  </ul>
+</nav>
+
+  <!-- Main Dashboard Content -->
+  <main>
+    <!-- User Welcome -->
+     
+     <span id="user-email"></span>
+     <span id="wallet-balance"></span> 
+    <section class="user-profile-summary">
+      <p id="user-email-text"></p>
+      <i class="fas fa-cog" onclick="toggleProfileMenu()" style="font-size: 18px; cursor: pointer;"></i>
+  <div class="user-profile">
+    <img id="userPhoto" src="default.jpg" alt="User Photo" />
+  <h3 id="userName">Welcome</h3>
+</div>
+ 
+    </section>
+
+    <div class="wallet">
+     <div class="wallet-box">
+  <h3>Wallet Balance:</h3>
+  <p>₦<span id="walletBalance">0.00</span></p>
+  <button id="fundWalletBtn">Fund Wallet</button>
+</div>
+
+</div>
+
+<!-- Modal for funding wallet -->
+<div id="fund-wallet-modal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span id="close-modal" style="cursor:pointer;">&times;</span>
+    <h2>Fund Your Wallet</h2>
+    <input type="number" id="fund-amount" placeholder="Enter amount" min="100" />
+    <button id="submit-fund">Submit</button>
+    <div id="fund-loading" style="display:none;">Processing...</div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" style="visibility:hidden; position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+ background:#4caf50; color:#fff; padding:10px 20px; border-radius:5px;"></div>
+
+    <!-- Services Section -->
+    <section class="services">
+      <a href="buyairtime.html" class="service-card">
+        <i class="fas fa-phone-volume fa-2x"></i>
+        <p>Buy Airtime</p>
+      </a>
+      <a href="buydata.html" class="service-card">
+        <i class="fas fa-wifi fa-2x"></i>
+        <p>Buy Data</p>
+      </a>
+      <a href="electricity.html" class="service-card">
+        <i class="fas fa-bolt fa-2x"></i>
+        <p>Electricity Bill</p>
+      </a>
+      <a href="subscription.html" class="service-card">
+        <i class="fas fa-tv fa-2x"></i>
+        <p>TV Subscription</p>
+      </a>
+    </section>
+
+    <!-- Ads Section -->
+    <section class="ads-section">
+      <marquee behavior="scroll" direction="left">
+        🎉 Enjoy ₦100 on Every Referrals | Refer a friend and earn rewards 🤑
+      </marquee>
+    </section>
+
+    <!-- Transaction History -->
+    <section id="transaction-history">
+      <h2>Transaction History</h2>
+      <div class="transaction-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="transaction-body">
+            <!-- Filled dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <footer class="bottom-nav">
+    <a href="dashboard.html"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="reward.html"><i class="fas fa-gift"></i><span>Rewards</span></a>
+    <a href="referrals.html"><i class="fas fa-users"></i><span>Referrals</span></a>
+    <a href="profile.html"><i class="fas fa-user-cog"></i><span>Profile</span></a>
+  </footer>
+ <!-- Firebase SDK v9 (Compatible version) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // Your Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+    authDomain: "freenium-data001.firebaseapp.com",
+    projectId: "freenium-data001",
+    storageBucket: "freenium-data001.appspot.com",
+    messagingSenderId: "867380700269",
+    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+ 
+
+
+  const menuIcon = document.getElementById("menuIcon");
+  const closeIcon = document.getElementById("closeIcon");
+  const sideMenu = document.getElementById("sideMenu");
+
+  // Open Menu
+  menuIcon.addEventListener("click", () => {
+    sideMenu.classList.add("active");
+  });
+
+  // Close Menu
+  closeIcon.addEventListener("click", () => {
+    sideMenu.classList.remove("active");
+  });
+ 
+ auth.onAuthStateChanged(user => {
+  if (user) {
+    const uid = user.uid;
+    const email = user.email;
+
+    // Set email anywhere it's needed
+    const emailElement = document.getElementById("user-email");
+    if (emailElement) emailElement.textContent = email;
+
+    // Get user info from Firestore
+    db.collection("users").doc(uid).get()
+      .then(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+
+          // Name (fallback to Freenium User)
+          const name = data.name || "Welcome";
+          document.getElementById("userName").textContent = name;
+
+          // Photo (fallback to default.jpg)
+          const photo = data.photo || "default.jpg";
+          document.getElementById("userPhoto").src = photo;
+
+          // Wallet
+          const wallet = data.wallet || 0;
+          document.getElementById("walletBalance").textContent = parseFloat(wallet).toFixed(2);
+        } else {
+          console.warn("User document does not exist.");
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching user profile:", error);
+      });
+
+  } else {
+    // User not logged in
+    window.location.href = "index.html";
+  }
+});
+
+function logout() {
+  firebase.auth().signOut()
+    .then(() => {
+      // Logout successful
+      window.location.href = "index.html"; // Redirect to login/home page
+    })
+    .catch((error) => {
+      console.error("Logout failed:", error);
+      alert("Logout failed: " + error.message);
+    });
+}
+window.addEventListener("load", () => {
+  const spinner = document.getElementById("globalSpinner");
+  spinner.classList.add("hidden");
+});
+function showSpinner() {
+  document.getElementById("globalSpinner").classList.remove("hidden");
+}
+
+function hideSpinner() {
+  document.getElementById("globalSpinner").classList.add("hidden");
+}
+document.getElementById("submit-fund").addEventListener("click", () => {
+  showSpinner();
+
+  // Simulate your wallet funding logic
+  setTimeout(() => {
+    hideSpinner();
+    showToast("Wallet funded successfully ✅");
+    document.getElementById("fund-wallet-modal").style.display = "none";
+  }, 2000);
+});
+ </script>
+  </body>
+  </html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FREENIUM Referral</title>
+  <link rel="stylesheet" href="referral.css" />
+   <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+</head>
+<body>
+  <section class="referral-section">
+    <div class="referral-container">
+      <h2>📢 Invite & Earn</h2>
+
+      <p>Your Referral Code</p>
+      <div class="referral-code-box">
+        <input type="text" id="referralCode" value="" readonly />
+        <button onclick="copyReferralCode()">Copy</button>
+      </div>
+
+      <p class="referral-note">
+        Share this code with your friends and earn ₦500 for each successful sign-up!
+      </p>
+
+      <div class="referral-stats">
+        <p>People Referred</p>
+        <h3 id="referralCount">0</h3>
+      </div>
+
+      <a href="dashboard.html">&lt; Back to Dashboard</a>
+    </div>
+  </section>
+
+  <script>
+    function copyReferralCode() {
+      const codeInput = document.getElementById('referralCode');
+      codeInput.select();
+      codeInput.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(codeInput.value);
+      alert('Referral code copied!');
+    }
+  </script>
+
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+    authDomain: "freenium-data001.firebaseapp.com",
+    projectId: "freenium-data001",
+    storageBucket: "freenium-data001.appspot.com",
+    messagingSenderId: "867380700269",
+    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const referralInput = document.getElementById('referralCode');
+  const referralStats = document.getElementById('referralCount');
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "index.html";
+      return;
+    }
+
+    try {
+      const uid = user.uid;
+      const userRef = doc(db, "users", uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        const referrals = userData.referrals || [];
+
+        // 👇 Now using UID directly as the referral code
+        referralInput.value = uid;
+        referralStats.innerText = referrals.length;
+      } else {
+        console.warn("⚠️ User document not found.");
+      }
+
+    } catch (err) {
+      console.error("🔥 Error loading referral data:", err);
+    }
+  });
+</script>
+
+</body>
+</html>

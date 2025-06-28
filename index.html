@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Freenium Login/Signup</title>
+  <link rel="stylesheet" href="indexst.css" />
+  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+  <style>
+    /* Spinner Overlay */
+    #loadingSpinner {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.4s ease;
+    }
+    #loadingSpinner.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #loadingSpinner img {
+      width: 50px;
+      height: 70px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-container">
+  <!-- Spinner -->
+  <div id="loadingSpinner" class="hidden">
+    <img src="https://i.imgur.com/KTBvgla.png" alt="Loading...">
+  </div>
+
+  <div class="toggle-tabs">
+    <button id="loginTab" class="active">Login</button>
+    <button id="signupTab">Signup</button>
+  </div>
+
+  <!-- Login Form -->
+  <form id="loginForm">
+    <h2>Login</h2>
+    <input type="email" id="loginEmail" placeholder="Email" required />
+   <div class="password-wrapper">
+  <input type="password" id="loginPassword" placeholder="Password" required>
+  <span class="toggle-password">👁️</span>
+</div>
+    <button type="submit">Login</button>
+    <div class="or-divider">OR</div>
+  </form>
+
+  <!-- Signup Form -->
+  <form id="signupForm" style="display:none;">
+    <h2>Signup</h2>
+    <input type="text" id="signupName" placeholder="Full Name" required />
+    <input type="tel" id="signupPhone" placeholder="Phone Number" required />
+    <input type="email" id="signupEmail" placeholder="Email" required />
+    <div class="password-wrapper">
+  <input type="password" id="signupPassword" placeholder="Password" required>
+  <span class="toggle-password">👁️</span>
+</div>
+<div class="password-wrapper">
+  <input type="password" id="confirmPassword" placeholder="Re-Enter your Password" required>
+  <span class="toggle-password">👁️</span>
+</div>
+    <input type="text" id="referrerCode" placeholder="Referral Code (optional)" />
+    <button type="submit">Signup</button>
+    <div class="or-divider">OR</div>
+  </form>
+
+  <!-- Google Sign-in -->
+  <div class="google-btn" id="googleLogin">
+    <img src="https://img.icons8.com/color/48/google-logo.png"/> Continue with Google
+  </div>
+
+  <div id="toast" class="toast">Welcome to Freenium</div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+    authDomain: "freenium-data001.firebaseapp.com",
+    projectId: "freenium-data001",
+    storageBucket: "freenium-data001.appspot.com",
+    messagingSenderId: "867380700269",
+    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const loginTab = document.getElementById("loginTab");
+  const signupTab = document.getElementById("signupTab");
+  const loginForm = document.getElementById("loginForm");
+  const signupForm = document.getElementById("signupForm");
+  const loadingSpinner = document.getElementById("loadingSpinner");
+
+  loginTab.onclick = () => {
+    loginTab.classList.add("active");
+    signupTab.classList.remove("active");
+    loginForm.style.display = "block";
+    signupForm.style.display = "none";
+  };
+
+  signupTab.onclick = () => {
+    signupTab.classList.add("active");
+    loginTab.classList.remove("active");
+    signupForm.style.display = "block";
+    loginForm.style.display = "none";
+  };
+
+  const showToast = (msg, color = "#4caf50") => {
+    const toast = document.getElementById("toast");
+    toast.innerText = msg;
+    toast.style.backgroundColor = color;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 3000);
+  };
+
+  // SIGNUP
+  signupForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    loadingSpinner.classList.remove("hidden");
+
+    const fullName = document.getElementById("signupName").value;
+    const phone = document.getElementById("signupPhone").value;
+    const email = document.getElementById("signupEmail").value;
+    const password = document.getElementById("signupPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+    const referrerCode = document.getElementById("referrerCode").value;
+
+    if (password !== confirmPassword) {
+      showToast("Passwords do not match!", "#f44336");
+      loadingSpinner.classList.add("hidden");
+      return;
+    }
+
+    try {
+      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      const uid = cred.user.uid;
+      const userData = {
+        fullName,
+        email,
+        phone,
+        wallet: 0,
+        rewards: 0,
+        referrals: [],
+        referredBy: referrerCode || null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+
+      await db.collection("users").doc(uid).set(userData);
+
+      if (referrerCode) {
+        const refDoc = await db.collection("users").doc(referrerCode).get();
+        if (refDoc.exists) {
+          await db.collection("users").doc(referrerCode).update({
+            rewards: firebase.firestore.FieldValue.increment(500),
+            referrals: firebase.firestore.FieldValue.arrayUnion(uid)
+          });
+        }
+      }
+
+      showToast("Signup successful 🎉");
+      window.location.href = "dashboard.html";
+
+    } catch (err) {
+      showToast("Signup failed: " + err.message, "#f44336");
+    } finally {
+      loadingSpinner.classList.add("hidden");
+    }
+  });
+
+  // LOGIN
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    loadingSpinner.classList.remove("hidden");
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      showToast("Login successful ✅");
+      window.location.href = "dashboard.html";
+    } catch (err) {
+      showToast("Login failed: " + err.message, "#f44336");
+    } finally {
+      loadingSpinner.classList.add("hidden");
+    }
+  });
+
+  // GOOGLE SIGN-IN
+  const provider = new firebase.auth.GoogleAuthProvider();
+  document.getElementById("googleLogin").addEventListener("click", async () => {
+    loadingSpinner.classList.remove("hidden");
+    try {
+      const result = await auth.signInWithPopup(provider);
+      const user = result.user;
+      const userRef = db.collection("users").doc(user.uid);
+      const doc = await userRef.get();
+      if (!doc.exists) {
+        await userRef.set({
+          email: user.email,
+          name: user.displayName,
+          photo: user.photoURL,
+          wallet: 0,
+          rewards: 0,
+          referrals: [],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+      }
+      showToast("Google sign-in successful ✅");
+      window.location.href = "dashboard.html";
+    } catch (err) {
+      showToast("Google sign-in failed: " + err.message, "#f44336");
+    } finally {
+      loadingSpinner.classList.add("hidden");
+    }
+  });
+document.querySelectorAll(".toggle-password").forEach(icon => {
+  icon.addEventListener("click", () => {
+    const input = icon.previousElementSibling;
+    const isPassword = input.type === "password";
+    input.type = isPassword ? "text" : "password";
+    icon.textContent = isPassword ? "🙈" : "👁️";
+  });
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+.settings-section {
+  background: #111827;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.settings-container {
+  background: #1f2937;
+  padding: 30px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  text-align: left;
+}
+
+.settings-container h2 {
+  text-align: center;
+  color: #00b96b;
+  margin-bottom: 20px;
+}
+
+.settings-container form {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-container label {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.settings-container input[type="password"] {
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  margin-bottom: 15px;
+  background: #374151;
+  color: #fff;
+}
+
+.settings-container button {
+  padding: 12px;
+  background: #00b96b;
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.theme-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 25px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0;
+  right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #00b96b;
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+a {
+  display: block;
+  margin-top: 20px;
+  color: yellow;
+  text-align: center;
+  text-decoration: none;
+}
+
+a:hover {
+  color: greenyellow;
+}
+.password-wrapper {
+  position: relative;
+}
+
+
+input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: 5px;
+  border: 1px solid #330f0f;
+  outline: none;
+}
+
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 30%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}

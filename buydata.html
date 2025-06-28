@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">  
+  <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buy Data - FREENIUM DATA</title>
+  <link rel="stylesheet" href="data.css" />
+   <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+</head>
+<body>
+<section class="buy-data-section">
+  <div class="data-container">
+  <h2>Buy Data</h2>
+  <h3>Select Network</h3>
+
+  <div class="network" onclick="selectedNetwork(this)">
+    <img src="https://i.imgur.com/nqB32k8.png" alt="MTN" data-network="MTN" />
+  </div>
+
+  <div class="network" onclick="selectedNetwork(this)">
+    <img src="https://i.imgur.com/FXvtyZZ.png" alt="Airtel" data-network="Airtel" />
+  </div>
+
+  <div class="network" onclick="selectedNetwork(this)">
+    <img src="https://i.imgur.com/mgjfAJr.jpeg" alt="Glo" data-network="Glo" />
+  </div>
+
+  <div class="network" onclick="selectedNetwork(this)">
+    <img src="https://i.imgur.com/XKy0ckO.jpeg" alt="9mobile" data-network="9mobile" />
+  </div>
+
+  <!-- Hidden input to store the selected value -->
+  <input type="hidden" id="selectedNetwork">
+</div>
+    <form id="data-form">
+      <input type="tel" id="phone" placeholder="Enter Phone Number" required />
+      
+      <label for="dataPlan">Select Data Plan</label>
+      <select id="dataPlan" required>
+        <option value="" disabled selected>Select a network first</option>
+      </select>
+       <button id="buyBtn" type="submit">Buy Now</button>
+
+      <a href="dashboard.html" class="back-arrow">&lt; PREVIOUS</a>
+    </form>
+
+    <div class="loading hidden" id="loading">
+      <div class="spinner"></div>
+      Processing...
+    </div>
+
+    <div id="toast" class="toast">Transaction Successful</div>
+  </div>
+</section>
+
+<script>
+  function selectedNetwork(divElement) {
+    // Remove selected from all
+    const networks = document.querySelectorAll('.network');
+    networks.forEach(net => net.classList.remove('selected'));
+
+    // Add selected to clicked one
+    divElement.classList.add('selected');
+
+    // Get the image inside the clicked div
+    const img = divElement.querySelector('img');
+    const selected = img.getAttribute('data-network');
+
+    // Save to hidden input
+    document.getElementById('selectedNetwork').value = selected;
+
+    console.log("Selected Network:", selected); // For testing
+  }
+  // To show the toast when transaction is successful
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3000);
+}
+  // All your data plans mapped by network
+  const dataPlans = {
+    MTN: [
+      { label: "500MB - ₦150", value: "mtn_500mb" },
+      { label: "1GB - ₦300", value: "mtn_1gb" },
+      { label: "2GB - ₦500", value: "mtn_2gb" }
+    ],
+    Airtel: [
+      { label: "500MB - ₦200", value: "airtel_500mb" },
+      { label: "1.5GB - ₦500", value: "airtel_1_5gb" },
+      { label: "3GB - ₦900", value: "airtel_3gb" }
+    ],
+    Glo: [
+      { label: "1GB - ₦250", value: "glo_1gb" },
+      { label: "2.5GB - ₦600", value: "glo_2_5gb" },
+      { label: "5GB - ₦1000", value: "glo_5gb" }
+    ],
+    "9mobile": [
+      { label: "1GB - ₦300", value: "9mobile_1gb" },
+      { label: "2GB - ₦600", value: "9mobile_2gb" },
+      { label: "4.5GB - ₦1100", value: "9mobile_4_5gb" }
+    ]
+  };
+
+  function selectedNetwork(divElement) {
+    // Remove previous selection
+    const networks = document.querySelectorAll('.network');
+    networks.forEach(net => net.classList.remove('selected'));
+
+    // Highlight selected
+    divElement.classList.add('selected');
+
+    // Get network name
+    const img = divElement.querySelector('img');
+    const selected = img.getAttribute('data-network');
+
+    // Set hidden input
+    document.getElementById('selectedNetwork').value = selected;
+
+    // Load data plans for that network
+    populateDataPlans(selected);
+
+    console.log("Selected Network:", selected);
+  }
+
+  function populateDataPlans(network) {
+    const dataPlanSelect = document.getElementById("dataPlan");
+
+    // Clear previous options
+    dataPlanSelect.innerHTML = "";
+
+    // If valid network, load plans
+    if (dataPlans[network]) {
+      dataPlans[network].forEach(plan => {
+        const option = document.createElement("option");
+        option.value = plan.value;
+        option.textContent = plan.label;
+        dataPlanSelect.appendChild(option);
+      });
+    } else {
+      // If nothing selected
+      const option = document.createElement("option");
+      option.textContent = "Select a network first";
+      option.disabled = true;
+      option.selected = true;
+      dataPlanSelect.appendChild(option);
+    }
+  }
+
+</script>
+ <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+    authDomain: "freenium-data001.firebaseapp.com",
+    projectId: "freenium-data001",
+    storageBucket: "freenium-data001.firebasestorage.app",
+    messagingSenderId: "867380700269",
+    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+</script>
+<script type="module">
+  import { db, auth } from './firebase.js';
+  import {
+    collection,
+    addDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+  import {
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+  const buyBtn = document.getElementById("buyBtn");
+
+  buyBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    const network = document.getElementById("selectedNetwork").value;
+    const phone = document.getElementById("phone").value;
+    const dataPlan = document.getElementById("dataPlan");
+    const selectedOption = dataPlan.options[dataPlan.selectedIndex];
+    const plan = selectedOption.value;
+    const amount = Number(selectedOption.textContent.split("₦")[1].trim());
+
+    // Validate inputs
+    if (!network || !phone || !plan || isNaN(amount)) {
+      alert("Please fill in all fields correctly.");
+      return;
+    }
+
+    // Check if user is logged in
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        alert("You must be logged in to make a purchase.");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "transactions"), {
+          uid: user.uid,
+          type: "data",
+          network,
+          phone,
+          plan,
+          amount,
+          status: "pending",
+          createdAt: serverTimestamp()
+        });
+
+        alert("✅ Transaction saved successfully to Firestore.");
+      } catch (err) {
+        console.error("❌ Error saving transaction:", err.message);
+        alert("Failed to save transaction.");
+      }
+    });
+  });
+  document.getElementById("buyBtn").addEventListener("click", () => {
+  showSpinner();
+  // perform data purchase
+  setTimeout(() => {
+    hideSpinner();
+    showToast("Data purchased successfully ✅");
+  }, 2500);
+});
+
+</script>
+
+
+</body>
+</html>
