@@ -8,10 +8,6 @@
   <link rel="stylesheet" href="style.css" />
    <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
 </head>
-  <body>
-<div id="globalSpinner">
-  <img src="https://i.imgur.com/KTBvgla.png" alt="Loading...">
-</div>
   <!-- Header -->
   <header>
   <div id="menuIcon" class="menu-icon">☰</div>
@@ -50,7 +46,6 @@
       <p id="user-email-text"></p>
       <i class="fas fa-cog" onclick="toggleProfileMenu()" style="font-size: 18px; cursor: pointer;"></i>
   <div class="user-profile">
-    <img id="userPhoto" src="default.jpg" alt="User Photo" />
   <h3 id="userName">Welcome</h3>
 </div>
  
@@ -222,28 +217,7 @@ function logout() {
       console.error("Logout failed:", error);
       alert("Logout failed: " + error.message);
     });
-}
-window.addEventListener("load", () => {
-  const spinner = document.getElementById("globalSpinner");
-  spinner.classList.add("hidden");
-});
-function showSpinner() {
-  document.getElementById("globalSpinner").classList.remove("hidden");
-}
-
-function hideSpinner() {
-  document.getElementById("globalSpinner").classList.add("hidden");
-}
-document.getElementById("submit-fund").addEventListener("click", () => {
-  showSpinner();
-
-  // Simulate your wallet funding logic
-  setTimeout(() => {
-    hideSpinner();
-    showToast("Wallet funded successfully ✅");
-    document.getElementById("fund-wallet-modal").style.display = "none";
-  }, 2000);
-});
+  }
  </script>
   </body>
   </html>
