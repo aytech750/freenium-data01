@@ -18,6 +18,7 @@
           <input type="password" id="currentPassword" placeholder="Enter current password" required />
           <span class="toggle-password">👁️</span>
         </div>
+
         <label for="newPassword">New Password</label>
         <div class="password-wrapper">
           <input type="password" id="newPassword" placeholder="Enter new password" required />
@@ -29,95 +30,88 @@
           <input type="password" id="confirmNewPassword" placeholder="Re-enter new password" required />
           <span class="toggle-password">👁️</span>
         </div>
+
         <button type="submit">Update Password</button>
-
+        <div id="toast" class="toast"></div>
         <a href="dashboard.html">&lt; Back to Dashboard</a>
-
       </form>
     </div>
   </section>
- <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
-    authDomain: "freenium-data001.firebaseapp.com",
-    projectId: "freenium-data001",
-    storageBucket: "freenium-data001.appspot.com",
-    messagingSenderId: "867380700269",
-    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
-  };
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import {
+      getAuth,
+      reauthenticateWithCredential,
+      EmailAuthProvider,
+      updatePassword
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+      authDomain: "freenium-data001.firebaseapp.com",
+      projectId: "freenium-data001",
+      storageBucket: "freenium-data001.appspot.com",
+      messagingSenderId: "867380700269",
+      appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+    };
 
-  // Theme Toggle
-  const themeSwitch = document.getElementById("themeSwitch");
-  themeSwitch.addEventListener("change", () => {
-    document.body.classList.toggle("dark-theme", themeSwitch.checked);
-    localStorage.setItem("freenium-theme", themeSwitch.checked ? "dark" : "light");
-  });
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-  // Set saved theme on load
-  window.addEventListener("DOMContentLoaded", () => {
-    const savedTheme = localStorage.getItem("freenium-theme");
-    if (savedTheme === "dark") {
-      themeSwitch.checked = true;
-      document.body.classList.add("dark-theme");
-    }
-  });
+    window.addEventListener("DOMContentLoaded", () => {
+      // ✅ Toggle password show/hide
+      document.querySelectorAll(".toggle-password").forEach(icon => {
+        icon.addEventListener("click", () => {
+          const input = icon.previousElementSibling;
+          const isPassword = input.type === "password";
+          input.type = isPassword ? "text" : "password";
+          icon.textContent = isPassword ? "🙈" : "👁️";
+        });
+      });
 
-  // Password Update Logic
-  const form = document.querySelector("form");
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const currentPassword = document.getElementById("currentPassword").value;
-    const newPassword = document.getElementById("newPassword").value;
-    const confirmNewPassword = document.getElementById("confirmNewPassword").value;
-
-    if (newPassword !== confirmNewPassword) {
-      return alert("New passwords do not match.");
-    }
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        return alert("You are not logged in.");
+      // ✅ Show toast message
+      function showToast(message, isSuccess = true) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.style.backgroundColor = isSuccess ? "#28a745" : "#dc3545";
+        toast.classList.add("show");
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 3000);
       }
 
-      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      // ✅ Handle password update
+      const form = document.querySelector("form");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-      try {
-        await reauthenticateWithCredential(user, credential);
-        await updatePassword(user, newPassword);
-        alert("✅ Password updated successfully.");
-        form.reset();
-      } catch (error) {
-        console.error(error);
-        alert("❌ Error: " + error.message);
-      }
+        const currentPassword = document.getElementById("currentPassword").value;
+        const newPassword = document.getElementById("newPassword").value;
+        const confirmNewPassword = document.getElementById("confirmNewPassword").value;
+
+        if (newPassword !== confirmNewPassword) {
+          return showToast("❌ New passwords do not match", false);
+        }
+
+        const user = auth.currentUser;
+        if (!user) {
+          return showToast("❌ You are not logged in", false);
+        }
+
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+
+        try {
+          await reauthenticateWithCredential(user, credential);
+          await updatePassword(user, newPassword);
+          showToast("✅ Password updated successfully");
+          form.reset();
+        } catch (error) {
+          console.error("❌ Error updating password:", error);
+          showToast("❌ " + error.message, false);
+        }
+      });
     });
-  });
-window.addEventListener("DOMContentLoaded", () => {
-  // Load saved theme
-  const savedTheme = localStorage.getItem("freenium-theme");
-  if (savedTheme === "dark") {
-    themeSwitch.checked = true;
-    document.body.classList.add("dark-theme");
-  }
-
-  // Handle password toggle
-  document.querySelectorAll(".toggle-password").forEach(icon => {
-    icon.addEventListener("click", () => {
-      const input = icon.previousElementSibling;
-      const isPassword = input.type === "password";
-      input.type = isPassword ? "text" : "password";
-      icon.textContent = isPassword ? "🙈" : "👁️";
-    });
-  });
-});
-</script>
-
+  </script>
 </body>
 </html>
