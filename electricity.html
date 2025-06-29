@@ -37,7 +37,10 @@
 
   <form id="electricityForm">
     <input type="text" id="meterNumber" placeholder="Enter Meter Number" required />
-    <input type="number" id="amount" placeholder="Enter Amount (₦)" required />
+    <div class="amount-wrapper">
+  <span class="naira-icon">₦</span>
+  <input type="number" placeholder="Enter amount" />
+</div>
 
     <select id="meterType" required>
       <option disabled selected>Select Meter Type</option>
