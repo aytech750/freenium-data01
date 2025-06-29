@@ -99,7 +99,15 @@
       }
     });
   });
- window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", () => {
+  // Load saved theme
+  const savedTheme = localStorage.getItem("freenium-theme");
+  if (savedTheme === "dark") {
+    themeSwitch.checked = true;
+    document.body.classList.add("dark-theme");
+  }
+
+  // Handle password toggle
   document.querySelectorAll(".toggle-password").forEach(icon => {
     icon.addEventListener("click", () => {
       const input = icon.previousElementSibling;
