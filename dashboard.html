@@ -181,6 +181,44 @@
       .then(doc => {
         if (doc.exists) {
           const data = doc.data();
+          // Fetch and display transactions
+db.collection("transactions")
+  .where("uid", "==", uid)
+  .orderBy("timestamp", "desc")
+  .limit(20)
+  .get()
+  .then(querySnapshot => {
+    const tbody = document.getElementById("transaction-body");
+    tbody.innerHTML = ""; // clear any existing rows
+
+    if (querySnapshot.empty) {
+      tbody.innerHTML = "<tr><td colspan='4'>No transactions found</td></tr>";
+    } else {
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const date = data.timestamp?.toDate().toLocaleString() || "N/A";
+        const type = data.type || "N/A";
+        const amount = data.amount || 0;
+        const status = data.status || "Pending";
+
+        const row = `
+          <tr>
+            <td>${date}</td>
+            <td>${type}</td>
+            <td>₦${parseFloat(amount).toFixed(2)}</td>
+            <td>${status}</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+    }
+  })
+  .catch(error => {
+    console.error("Error fetching transactions:", error);
+    const tbody = document.getElementById("transaction-body");
+    tbody.innerHTML = "<tr><td colspan='4'>Error loading transactions</td></tr>";
+  });
+
 
           // Name (fallback to Freenium User)
           const name = data.name || "Welcome";
@@ -188,8 +226,7 @@
 
           // Photo (fallback to default.jpg)
           const photo = data.photo || "default.jpg";
-          document.getElementById("userPhoto").src = photo;
-
+        
           // Wallet
           const wallet = data.wallet || 0;
           document.getElementById("walletBalance").textContent = parseFloat(wallet).toFixed(2);

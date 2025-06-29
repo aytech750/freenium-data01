@@ -395,3 +395,12 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+.success {
+  color: #00b96b;
+}
+.failed {
+  color: red;
+}
+.pending {
+  color: orange;
+}
