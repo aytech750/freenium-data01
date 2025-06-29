@@ -1,3 +1,8 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 .settings-section {
   background: #111827;
   color: #fff;
@@ -120,6 +125,9 @@ a:hover {
 .password-wrapper {
   position: relative;
   margin-bottom: 15px;
+  width: 100%;
+  overflow: hidden;
+
 }
 
 .password-wrapper input {
@@ -129,8 +137,8 @@ a:hover {
   color: #fff;
   border: none;
   border-radius: 6px;
-}
 
+}
 .toggle-password {
   position: absolute;
   top: 50%;
@@ -140,7 +148,9 @@ a:hover {
   font-size: 1rem;
   color: #aaa;
   z-index: 1;
+  pointer-events: all;
 }
+
 .toast {
   position: fixed;
   bottom: 30px;
