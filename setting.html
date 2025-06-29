@@ -99,14 +99,16 @@
       }
     });
   });
+ window.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".toggle-password").forEach(icon => {
-  icon.addEventListener("click", () => {
-    const input = icon.previousElementSibling;
-    const isPassword = input.type === "password";
-    input.type = isPassword ? "text" : "password";
-    icon.textContent = isPassword ? "🙈" : "👁️";
+    icon.addEventListener("click", () => {
+      const input = icon.previousElementSibling;
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      icon.textContent = isPassword ? "🙈" : "👁️";
+    });
   });
-  });
+});
 </script>
 
 </body>
