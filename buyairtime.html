@@ -35,7 +35,11 @@
 
     <form id="airtime-form">
       <input type="tel" id="phone" placeholder="Enter Phone Number" required />
-      <input type="number" id="amount" placeholder="Enter Amount (₦)" required />
+     <div class="amount-wrapper">
+  <span class="naira-icon">₦</span>
+  <input type="number" placeholder="Enter amount" />
+</div>
+
       <button id="buyBtn">Buy Now</button>
       <a href="dashboard.html" class="back-arrow">&lt; PREVIOUS</a>
     </form>
