@@ -492,3 +492,34 @@
     opacity: 1;
   }
 }
+/* Modal Overlay */
+#fund-wallet-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* dim background */
+  display: flex;
+  justify-content: center;
+  align-items: center; /* 🔥 This centers it vertically */
+  z-index: 1000;
+}
+
+/* Modal Box */
+#fund-wallet-modal .modal-content {
+  background: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+#fund-wallet-modal {
+  transition: opacity 0.3s ease;
+}
+
+#fund-wallet-modal .modal-content {
+  transform: translateY(0); /* no initial jump */
+}
