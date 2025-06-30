@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader("Access-Control-Allow-Origin", "https://freenium-data01.vercel.app"); // Secure domain
+  // CORS Headers
+  res.setHeader("Access-Control-Allow-Origin", "https://freenium-data01.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
@@ -15,40 +15,29 @@ export default async function handler(req, res) {
 
   const { network, mobile, amount, request_id } = req.body;
 
-  const API_KEY = "a42e03b76d90921de3dfd6f4add234fb850bca7944c6d1576244a8904cf59294"; // Your Simhost API key
+  // ✅ Replace with your real values
+  const userID = "CK101252894";
+  const apiKey = "988DL2CSH2Y942I37AH84J9K8836R595UDC64O7I6S5NC5FXAM643ZYRR9QJT3T0";
+
+  // Clubkonnect endpoint
+  const url = `https://www.nellobytesystems.com/APIAirtimeV1.asp?UserID=${userID}&APIKey=${apiKey}&MobileNetwork=${network}&Amount=${amount}&MobileNumber=${mobile}&RequestID=${request_id}`;
 
   try {
-    const response = await fetch("https://simhostng.com/api/airtime", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "FreeniumData/1.0"
-      },
-      body: JSON.stringify({
-        apikey: API_KEY,
-        network,
-        mobile,
-        amount,
-        request_id
-      })
-    });
-
-    const text = await response.text(); // Read raw response
-    console.log("🧾 Raw Simhost Response:", text);
+    const response = await fetch(url);
+    const text = await response.text();
 
     let result;
     try {
       result = JSON.parse(text);
     } catch (err) {
-      return res.status(500).json({
-        message: "Simhost returned invalid JSON",
-        raw: text.slice(0, 200)
-      });
+      // Sometimes Clubkonnect returns plain text, not JSON
+      console.warn("Non-JSON response received from Clubkonnect:", text);
+      return res.status(200).json({ raw: text });
     }
 
-    return res.status(200).json(result); // Only send parsed response once
+    return res.status(200).json(result);
   } catch (error) {
-    console.error("🔥 Proxy error:", error);
+    console.error("❌ Proxy error:", error);
     return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 }
