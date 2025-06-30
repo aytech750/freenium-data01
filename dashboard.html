@@ -278,8 +278,8 @@ function logout() {
 
   submitFund.addEventListener("click", async () => {
     const amount = parseFloat(fundAmountInput.value);
-    if (!amount || amount < 50) {
-      alert("Enter a valid amount (minimum ₦50)");
+    if (!amount || amount < 100) {
+      alert("Enter a valid amount (minimum ₦100)");
       return;
     }
 
@@ -287,7 +287,7 @@ function logout() {
     if (!user) return alert("You must be logged in");
 
     const email = user.email;
-    const amountKobo = amount * 50;
+    const amountKobo = amount * 100;
 
     let handler = PaystackPop.setup({
       key: "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75", // Replace with your Paystack Public Key
