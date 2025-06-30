@@ -256,5 +256,89 @@ function logout() {
     });
   }
  </script>
+ <!-- Paystack Script -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script>
+  // Fund Wallet Modal Logic
+  const fundBtn = document.getElementById("fundWalletBtn");
+  const modal = document.getElementById("fund-wallet-modal");
+  const closeModal = document.getElementById("close-modal");
+  const submitFund = document.getElementById("submit-fund");
+  const fundAmountInput = document.getElementById("fund-amount");
+  const loadingText = document.getElementById("fund-loading");
+
+  fundBtn.addEventListener("click", () => {
+    modal.style.display = "block";
+  });
+
+  closeModal.addEventListener("click", () => {
+    modal.style.display = "none";
+    fundAmountInput.value = "";
+  });
+
+  submitFund.addEventListener("click", async () => {
+    const amount = parseFloat(fundAmountInput.value);
+    if (!amount || amount < 100) {
+      alert("Enter a valid amount (minimum ₦100)");
+      return;
+    }
+
+    const user = firebase.auth().currentUser;
+    if (!user) return alert("You must be logged in");
+
+    const email = user.email;
+    const amountKobo = amount * 100;
+
+    let handler = PaystackPop.setup({
+      key: "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75", // Replace with your Paystack Public Key
+      email: email,
+      amount: amountKobo,
+      currency: "NGN",
+      callback: function (response) {
+        verifyPayment(response.reference, amount);
+      },
+      onClose: function () {
+        alert("Transaction was cancelled");
+      }
+    });
+
+    handler.openIframe();
+  });
+
+  async function verifyPayment(reference, amount) {
+    loadingText.style.display = "block";
+
+    try {
+      const res = await fetch("https://freenium-data01.vercel.app/api/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reference, amount })
+      });
+
+      const result = await res.json();
+      loadingText.style.display = "none";
+      showToast(result.message || "Wallet funded");
+
+      if (result.success) {
+        // Refresh wallet balance
+        location.reload();
+      }
+    } catch (err) {
+      console.error("Verification failed:", err);
+      loadingText.style.display = "none";
+      showToast("Verification failed. Try again.");
+    }
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.style.visibility = "visible";
+    setTimeout(() => {
+      toast.style.visibility = "hidden";
+    }, 3000);
+  }
+</script>
+
   </body>
   </html>
