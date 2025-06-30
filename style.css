@@ -404,24 +404,25 @@
 .pending {
   color: orange;
 }
-/* Fund Wallet Modal */
-.modal {
-  position: fixed;
-  z-index: 999;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(17, 24, 39, 0.8); /* dark glassy background */
-  display: flex;
+/* 🔒 Modal Background Overlay */
+#fund-wallet-modal {
+  display: none; /* Initially hidden, toggle with JS */
   justify-content: center;
   align-items: center;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(17, 24, 39, 0.8); /* Dark translucent background */
+  transition: opacity 0.3s ease;
 }
 
-.modal-content {
+/* 📦 Modal Box */
+#fund-wallet-modal .modal-content {
   background-color: #1f2937;
-  color: white;
+  color: #fff;
   padding: 30px 20px;
   border-radius: 10px;
   width: 90%;
@@ -432,11 +433,7 @@
   animation: slideIn 0.3s ease-out;
 }
 
-.modal-content h2 {
-  margin-bottom: 20px;
-  font-size: 1.5rem;
-}
-
+/* 📝 Input Field */
 .modal-content input[type="number"] {
   width: 100%;
   padding: 12px;
@@ -447,8 +444,9 @@
   outline: none;
 }
 
+/* ✅ Submit Button */
 .modal-content button {
-  background-color: #10b981; /* teal/green */
+  background-color: #10b981;
   border: none;
   color: white;
   padding: 12px 20px;
@@ -462,12 +460,13 @@
   background-color: #059669;
 }
 
+/* ❌ Close Button */
 #close-modal {
   position: absolute;
   top: 12px;
   right: 16px;
   font-size: 20px;
-  color: #f87171; /* red tone */
+  color: #f87171;
   font-weight: bold;
 }
 
@@ -475,13 +474,14 @@
   color: #ef4444;
 }
 
+/* 🔄 Loading text */
 #fund-loading {
   margin-top: 10px;
   color: #d1d5db;
   font-style: italic;
 }
 
-/* Smooth animation */
+/* 🎞️ Slide-in Animation */
 @keyframes slideIn {
   from {
     transform: translateY(-30px);
@@ -491,35 +491,4 @@
     transform: translateY(0);
     opacity: 1;
   }
-}
-/* Modal Overlay */
-#fund-wallet-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5); /* dim background */
-  display: flex;
-  justify-content: center;
-  align-items: center; /* 🔥 This centers it vertically */
-  z-index: 1000;
-}
-
-/* Modal Box */
-#fund-wallet-modal .modal-content {
-  background: #fff;
-  padding: 30px;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 400px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  text-align: center;
-}
-#fund-wallet-modal {
-  transition: opacity 0.3s ease;
-}
-
-#fund-wallet-modal .modal-content {
-  transform: translateY(0); /* no initial jump */
 }
