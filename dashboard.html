@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="style.css" />
    <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
 </head>
+<body>
   <!-- Header -->
   <header>
   <div id="menuIcon" class="menu-icon">☰</div>
@@ -288,18 +289,27 @@ function logout() {
     const email = user.email;
     const amountKobo = amount * 100;
 
-    let handler = PaystackPop.setup({
-      key: "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75", // Replace with your Paystack Public Key
-      email: email,
-      amount: amountKobo,
-      currency: "NGN",
-      callback: function (response) {
-        verifyPayment(response.reference, amount);
-      },
-      onClose: function () {
-        alert("Transaction was cancelled");
+  let handler = PaystackPop.setup({
+  key: "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75",
+  email: email,
+  amount: amountKobo,
+  currency: "NGN",
+  metadata: {
+    custom_fields: [
+      {
+        display_name: "User ID",
+        variable_name: "uid",
+        value: user.uid
       }
-    });
+    ]
+  },
+  callback: function (response) {
+    verifyPayment(response.reference, amount);
+  },
+  onClose: function () {
+    alert("Transaction was cancelled");
+  }
+});
 
     handler.openIframe();
   });
