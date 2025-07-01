@@ -16,7 +16,8 @@ const db = getFirestore();
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ message: "Method not allowed" });
 
-  const { reference, amount } = req.body;
+ const { reference } = req.body;
+
 
   try {
     const verifyRes = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
@@ -24,8 +25,8 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
       }
     });
-
-    const verifyData = await verifyRes.json();
+   const verifyData = await verifyRes.json();
+const amount = verifyData.data.amount / 100;
 
     if (verifyData.data && verifyData.data.status === "success") {
       const email = verifyData.data.customer.email;
@@ -49,6 +50,8 @@ export default async function handler(req, res) {
         amount,
         status: "success",
         reference,
+         method: verifyData.data.channel || "unknown",         // e.g., card, bank, etc.
+         metadata: verifyData.data.metadata || null,           // extra info (optional from Paystack)
         timestamp: admin.firestore.FieldValue.serverTimestamp()
       });
 
