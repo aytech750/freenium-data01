@@ -492,3 +492,29 @@
     opacity: 1;
   }
 }
+.amount-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.amount-wrapper .naira-icon {
+  position: absolute;
+  left: 12px;
+  top: 70%;
+  transform: translateY(-50%);
+  color: #aaa;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.amount-wrapper input {
+  width: 100%;
+  padding: 10px 40px 10px 50px; /* Left padding to make space for ₦ */
+  background: #374151;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+

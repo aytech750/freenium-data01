@@ -90,6 +90,20 @@
       e.preventDefault();
 
       const selectedNetwork = document.getElementById("selectedNetwork").value;
+      const networkMap = {
+  mtn: "1",
+  glo: "2",
+  airtel: "3",
+  etisalat: "4"
+};
+if (!networkId) {
+  alert("🚫 Invalid network selected");
+  return;
+}
+
+
+const networkId = networkMap[selectedNetwork.toLowerCase()];
+
       const phone = document.getElementById("phone").value.trim();
       const amount = parseFloat(document.getElementById("amount").value);
 
@@ -134,11 +148,12 @@
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            network: selectedNetwork,
-            mobile: phone,
-            amount,
-            request_id: requestId
-          })
+  network: networkId,  // <-- this is now the correct Clubkonnect ID
+  mobile: phone,
+  amount,
+  request_id: requestId
+})
+
         });
 
         const result = await response.json();
