@@ -90,19 +90,21 @@
       e.preventDefault();
 
       const selectedNetwork = document.getElementById("selectedNetwork").value;
-      const networkMap = {
+
+const networkMap = {
   mtn: "1",
   glo: "2",
   airtel: "3",
   etisalat: "4"
 };
+
+const networkId = networkMap[selectedNetwork.toLowerCase()];
+
 if (!networkId) {
   alert("🚫 Invalid network selected");
   return;
 }
 
-
-const networkId = networkMap[selectedNetwork.toLowerCase()];
 
       const phone = document.getElementById("phone").value.trim();
       const amount = parseFloat(document.getElementById("amount").value);
