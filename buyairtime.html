@@ -86,11 +86,11 @@
 
     const selectedNetwork = document.getElementById("selectedNetwork").value;
     const networkMap = {
-      mtn: "1",
-      airtel: "2",
-      glo: "3",
-      etisalat: "4"
-    };
+  mtn: "mtn",
+  airtel: "airtel",
+  glo: "glo",
+  etisalat: "etisalat"
+};
     const networkId = networkMap[selectedNetwork.toLowerCase()];
 
     if (!networkId) {
