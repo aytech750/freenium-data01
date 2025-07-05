@@ -14,14 +14,24 @@ export default async function handler(req, res) {
   }
 
   const { network, mobile, amount, request_id } = req.body;
+  const networkMap = {
+  mtn: "MTN",
+  airtel: "AIRTEL",
+  glo: "GLO",
+  etisalat: "ETISALAT"
+};
+
+const mappedNetwork = networkMap[network?.toLowerCase()];
+if (!mappedNetwork) {
+  return res.status(400).json({ message: "invalid_mobilenetwork" });
+}
 
   // ✅ Replace with your real values
   const userID = "CK101252894";
   const apiKey = "988DL2CSH2Y942I37AH84J9K8836R595UDC64O7I6S5NC5FXAM643ZYRR9QJT3T0";
 
   // Clubkonnect endpoint
-  const url = `https://www.nellobytesystems.com/APIAirtimeV1.asp?UserID=${userID}&APIKey=${apiKey}&MobileNetwork=${network}&Amount=${amount}&MobileNumber=${mobile}&RequestID=${request_id}`;
-
+ const url = `https://www.nellobytesystems.com/APIAirtimeV1.asp?UserID=${userID}&APIKey=${apiKey}&MobileNetwork=${mappedNetwork}&Amount=${amount}&MobileNumber=${mobile}&RequestID=${request_id}`;
   try {
     const response = await fetch(url);
     const text = await response.text();
