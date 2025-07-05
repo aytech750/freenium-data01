@@ -14,12 +14,15 @@ export default async function handler(req, res) {
   }
 
   const { network, mobile, amount, request_id } = req.body;
-  const networkMap = {
+  console.log("📦 Incoming Request Body:", req.body);
+
+ const networkMap = {
   mtn: "MTN",
   airtel: "AIRTEL",
   glo: "GLO",
-  etisalat: "ETISALAT"
+  etisalat: "9MOBILE" // ✅ CORRECT keyword for 9mobile
 };
+
 
 const mappedNetwork = networkMap[network?.toLowerCase()];
 if (!mappedNetwork) {
