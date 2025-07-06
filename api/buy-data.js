@@ -47,6 +47,11 @@ export default async function handler(req, res) {
     });
 
     const resultText = await response.text();
+    console.log("📨 Clubkonnect Response:", resultText);
+    console.log("📦 Incoming Body:", { network, phone, plan, amount });
+console.log("🧠 MobileNetwork Code:", MobileNetwork);
+console.log("🔐 UserID:", userID);
+// console.log("🔐 API Key:", apiKey); ❌ Don't log this publicly
 
     // Optionally parse XML or check for success keywords if needed
     if (resultText.includes("successful")) {
@@ -56,7 +61,7 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error("🔥 Error purchasing data:", error.message);
-    console.log("📨 Clubkonnect Response:", resultText);
+   
 
     return res.status(500).json({ success: false, error: error.message });
   }
