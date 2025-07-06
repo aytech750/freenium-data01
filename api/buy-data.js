@@ -55,9 +55,9 @@ console.log("🔐 UserID:", userID);
 
     // Optionally parse XML or check for success keywords if needed
     if (resultText.includes("successful")) {
-      return res.status(200).json({ success: true, message: "✅ Data purchase successful", data: resultText });
+      return res.status(200).json({ ORDER_RECEIVED: true, message: "✅ Data purchase successful", data: resultText });
     } else {
-      return res.status(500).json({ success: false, message: "❌ Data purchase failed", error: resultText });
+      return res.status(500).json({ ORDER_RECEIVED: false, message: "❌ Data purchase failed", error: resultText });
     }
   } catch (error) {
     console.error("🔥 Error purchasing data:", error.message);

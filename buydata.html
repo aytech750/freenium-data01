@@ -50,6 +50,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
   import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+ import { updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
@@ -171,33 +172,47 @@
       }
 
       try {
-        await addDoc(collection(db, "transactions"), {
-          uid: user.uid,
-          type: "data",
-          network,
-          phone,
-          plan,
-          amount,
-          status: "pending",
-          createdAt: serverTimestamp()
-        });
+       const requestId = `data_${user.uid}_${Date.now()}`;
+const docRef = await addDoc(collection(db, "transactions"), {
+  uid: user.uid,
+  type: "data",
+  network,
+  phone,
+  plan,
+  amount,
+  requestId,
+  status: "pending",
+  createdAt: serverTimestamp()
+});
 
-        showToast("✅ Transaction saved successfully.");
-        // 🔁 Call backend to process actual data purchase
+showToast("🔄 Processing data purchase...");
+
+// 🔁 Call backend
 const backendResponse = await fetch("https://freenium-data01.vercel.app/api/buy-data", {
   method: "POST",
   headers: {
     "Content-Type": "application/json"
   },
-  body: JSON.stringify({ network, phone, plan, amount })
+  body: JSON.stringify({ network, phone, plan, amount, requestId })
 });
 
 const result = await backendResponse.json();
 
-if (result.success) {
+// 🔄 Prepare document ref for updating
+const transactionRef = doc(db, "transactions", docRef.id);
+
+if (result.ORDER_RECEIVED) {
   showToast("✅ Data purchased successfully.");
+  await updateDoc(transactionRef, {
+    status: "success",
+    updatedAt: serverTimestamp()
+  });
 } else {
   showToast("❌ " + result.message);
+  await updateDoc(transactionRef, {
+    status: "failed",
+    updatedAt: serverTimestamp()
+  });
 }
 
         phoneInput.value = "";
