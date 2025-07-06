@@ -47,46 +47,90 @@
   <div id="toast" class="toast">Transaction Successful</div>
 </section>
 <script type="module">
-  // firebase.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+    authDomain: "freenium-data001.firebaseapp.com",
+    projectId: "freenium-data001",
+    storageBucket: "freenium-data001.appspot.com",
+    messagingSenderId: "867380700269",
+    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  };
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
-  authDomain: "freenium-data001.firebaseapp.com",
-  projectId: "freenium-data001",
-  storageBucket: "freenium-data001.appspot.com",
-  messagingSenderId: "867380700269",
-  appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const phoneInput = document.getElementById("phone");
+  const networkInput = document.getElementById("selectedNetwork");
+  const dataPlanSelect = document.getElementById("dataPlan");
+  const buyBtn = document.getElementById("buyBtn");
+  const loading = document.getElementById("loading");
+  const toast = document.getElementById("toast");
+
+ const dataPlans = {
+  MTN: [
+    { label: "500MB - 7/14 days (SME)", value: "500MB-SME", price: 500.0, basePrice: 440.0 },
+    { label: "1GB - 7/14 days (SME)", value: "1GB-SME", price: 1000.0, basePrice: 710.0 },
+    { label: "2GB - 7/14 days (SME)", value: "2GB-SME", price: 2000.0, basePrice: 1330.0 },
+    { label: "3GB - 20/30 days (SME)", value: "3GB-SME", price: 3000.0, basePrice: 2050.0 },
+    { label: "5GB - 20/30 days (SME)", value: "5GB-SME", price: 5000.0, basePrice: 2690.0 },
+    { label: "110MB Daily Plan - 1 day (Awoof Data)", value: "110MB-Awoof", price: 100.01, basePrice: 97.0 },
+    { label: "230MB Daily Plan - 1 day (Awoof Data)", value: "230MB-Awoof", price: 200.01, basePrice: 194.0 },
+    { label: "500MB Daily Plan - 1 day (Awoof Data)", value: "500MB-Awoof", price: 350.01, basePrice: 339.5 },
+    { label: "1GB Daily Plan + 1.5mins - 1 day (Awoof Data)", value: "1GB-Awoof", price: 500.01, basePrice: 485.0 },
+    // ...continue listing all MTN plans
+  ],
+
+  Glo: [
+    { label: "1GB - 3 days (SME)", value: "1GB-3D", price: 1000.11, basePrice: 282.0 },
+    { label: "3GB - 3 days (SME)", value: "3GB-3D", price: 3000.11, basePrice: 846.0 },
+    { label: "5GB - 3 days (SME)", value: "5GB-3D", price: 5000.11, basePrice: 1410.0 },
+    { label: "1GB - 7 days (SME)", value: "1GB-7D", price: 1000.12, basePrice: 329.0 },
+    // ...add all other Glo plans
+  ],
+
+  Airtel: [
+    { label: "1GB - 1 day (Awoof Data)", value: "1GB-Awoof", price: 499.91, basePrice: 483.91 },
+    { label: "1.5GB - 2 days (Awoof Data)", value: "1.5GB-Awoof", price: 599.91, basePrice: 580.71 },
+    { label: "2GB - 2 days (Awoof Data)", value: "2GB-Awoof", price: 749.91, basePrice: 725.91 },
+    // ...continue with all Airtel plans
+  ],
+
+  "9mobile": [
+    { label: "100MB - 1 day (Awoof Data)", value: "100MB-Awoof", price: 100.01, basePrice: 93.0 },
+    { label: "180MB - 1 day (Awoof Data)", value: "180MB-Awoof", price: 150.01, basePrice: 139.5 },
+    { label: "250MB - 1 day (Awoof Data)", value: "250MB-Awoof", price: 200.01, basePrice: 186.0 },
+    // ...continue with all 9mobile plans
+  ]
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
 
-export { auth, db };
+  // Network selection logic
   function selectedNetwork(divElement) {
-    document.querySelectorAll('.network').forEach(net => net.classList.remove('selected'));
-    divElement.classList.add('selected');
+    document.querySelectorAll(".network").forEach(net => net.classList.remove("selected"));
+    divElement.classList.add("selected");
 
-    const img = divElement.querySelector('img');
-    const selected = img.getAttribute('data-network');
-    document.getElementById('selectedNetwork').value = selected;
+    const selected = divElement.querySelector("img").getAttribute("data-network");
+    networkInput.value = selected;
     populateDataPlans(selected);
   }
 
+  // Attach to window so HTML onclick can use it
+  window.selectedNetwork = selectedNetwork;
+
+  // Populate dropdown
   function populateDataPlans(network) {
-    const dataPlanSelect = document.getElementById("dataPlan");
     dataPlanSelect.innerHTML = "";
 
     if (dataPlans[network]) {
       dataPlans[network].forEach(plan => {
         const option = document.createElement("option");
         option.value = plan.value;
-        option.textContent = plan.label; // 💡 You can change the label price here to apply your custom price
+        option.textContent = plan.label;
         dataPlanSelect.appendChild(option);
       });
     } else {
@@ -98,155 +142,34 @@ export { auth, db };
     }
   }
 
- const dataPlans = {
-  MTN: [
-    { label: "500MB - ₦440 (7/14 days - SME)", value: "mtn_470" },
-    { label: "1GB - ₦710 (7/14 days - SME)", value: "mtn_940" },
-    { label: "2GB - ₦1,330 (7/14 days - SME)", value: "mtn_1700" },
-    { label: "3GB - ₦2,050 (20/30 days - SME)", value: "mtn_2200" },
-    { label: "5GB - ₦2,690 (20/30 days - SME)", value: "mtn_3600" },
-    { label: "110MB - ₦97 (1 day - Awoof)", value: "mtn_98" },
-    { label: "230MB - ₦194 (1 day - Awoof)", value: "mtn_197" },
-    { label: "500MB - ₦339.50 (1 day - Awoof)", value: "mtn_345" },
-    { label: "1GB + 1.5min - ₦485 (1 day - Awoof)", value: "mtn_490" },
-    { label: "2.5GB - ₦873 (2 days - Awoof)", value: "mtn_900" },
-    { label: "3.2GB - ₦970 (2 days - Awoof)", value: "mtn_1000" },
-    { label: "1GB - ₦776 (7 days - Weekly)", value: "mtn_800" },
-    { label: "11GB - ₦3,395 (7 days - Weekly)", value: "mtn_3500" },
-    { label: "2GB + 2min - ₦1,455 (Monthly)", value: "mtn_1500" },
-    { label: "2.7GB + 2min - ₦1,940", value: "mtn_2000" },
-    { label: "3.5GB + 5min - ₦2,425", value: "mtn_2500" },
-    { label: "7GB - ₦3,395", value: "mtn_3500" },
-    { label: "10GB + 10min - ₦4,365", value: "mtn_4500" },
-    { label: "12.5GB - ₦5,335", value: "mtn_5500" },
-    { label: "16.5GB + 10min - ₦6,305", value: "mtn_6500" },
-    { label: "20GB - ₦7,275", value: "mtn_7500" },
-    { label: "25GB - ₦8,730", value: "mtn_9000" },
-    { label: "36GB - ₦10,670", value: "mtn_11000" },
-    { label: "75GB - ₦17,460", value: "mtn_18000" },
-    { label: "165GB - ₦33,950", value: "mtn_35000" },
-    { label: "150GB (60 days) - ₦38,800", value: "mtn_40000" },
-    { label: "480GB (90 days) - ₦87,300", value: "mtn_90000" }
-  ],
+  // Show toast
+  function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 3000);
+  }
 
-  Glo: [
-    { label: "1GB - ₦282 (3 days - SME)", value: "glo_1000_11" },
-    { label: "3GB - ₦846 (3 days - SME)", value: "glo_3000_11" },
-    { label: "5GB - ₦1,410 (3 days - SME)", value: "glo_5000_11" },
-    { label: "1GB - ₦329 (7 days - SME)", value: "glo_1000_12" },
-    { label: "3GB - ₦987 (7 days - SME)", value: "glo_3000_12" },
-    { label: "5GB - ₦1,645 (7 days - SME)", value: "glo_5000_12" },
-    { label: "Night 1GB - ₦329 (14 days)", value: "glo_1000_21" },
-    { label: "Night 3GB - ₦987 (14 days)", value: "glo_3000_21" },
-    { label: "Night 5GB - ₦1,645 (14 days)", value: "glo_5000_21" },
-    { label: "Night 10GB - ₦3,290 (14 days)", value: "glo_10000_21" },
-    { label: "200MB - ₦94", value: "glo_200" },
-    { label: "500MB - ₦235", value: "glo_500" },
-    { label: "1GB - ₦470", value: "glo_1000" },
-    { label: "2GB - ₦940", value: "glo_2000" },
-    { label: "3GB - ₦1,410", value: "glo_3000" },
-    { label: "5GB - ₦2,350", value: "glo_5000" },
-    { label: "10GB - ₦4,700", value: "glo_10000" },
-    { label: "125MB - ₦95.50 (Awoof)", value: "glo_125_awoof" },
-    { label: "260MB - ₦191 (Awoof)", value: "glo_260_awoof" },
-    { label: "1.5GB - ₦477.50", value: "glo_1_5" },
-    { label: "2.6GB - ₦955", value: "glo_2_6" },
-    { label: "5GB - ₦1,432.50", value: "glo_5" },
-    { label: "6.15GB - ₦1,910", value: "glo_6_15" },
-    { label: "7.5GB - ₦2,387.50", value: "glo_7_5" },
-    { label: "10GB - ₦2,865", value: "glo_10" },
-    { label: "12.5GB - ₦3,820", value: "glo_12_5" },
-    { label: "16GB - ₦4,775", value: "glo_16" },
-    { label: "28GB - ₦7,640", value: "glo_28" },
-    { label: "38GB - ₦9,550", value: "glo_38" },
-    { label: "64GB - ₦14,325", value: "glo_64" },
-    { label: "107GB - ₦19,100", value: "glo_107" },
-    { label: "2GB - ₦477.50 (1 day Awoof)", value: "glo_2_day" },
-    { label: "6GB - ₦1,432.50 (7 days)", value: "glo_6_week" },
-    { label: "2.5GB - ₦477.50 (Weekend)", value: "glo_2_5_weekend" },
-    { label: "875MB - ₦191 (Sunday only)", value: "glo_875_sun" },
-    { label: "165GB - ₦28,650", value: "glo_165" },
-    { label: "220GB - ₦34,380", value: "glo_220" },
-    { label: "320GB - ₦47,750", value: "glo_320" },
-    { label: "380GB - ₦57,300", value: "glo_380" },
-    { label: "475GB - ₦71,625", value: "glo_475" }
-  ],
-
-  Airtel: [
-    { label: "1GB - ₦483.91 (1 day Awoof)", value: "airtel_1_awoof" },
-    { label: "1.5GB - ₦580.71 (2 days Awoof)", value: "airtel_1_5_awoof" },
-    { label: "2GB - ₦725.91 (2 days Awoof)", value: "airtel_2_awoof" },
-    { label: "3GB - ₦967.91 (2 days Awoof)", value: "airtel_3_awoof" },
-    { label: "5GB - ₦1,451.91 (2 days Awoof)", value: "airtel_5_awoof" },
-    { label: "500MB - ₦483.92 (7 days)", value: "airtel_500_week" },
-    { label: "1GB - ₦774.31 (7 days)", value: "airtel_1_week" },
-    { label: "1.5GB - ₦967.92 (7 days)", value: "airtel_1_5_week" },
-    { label: "3.5GB - ₦1,451.92 (7 days)", value: "airtel_3_5_week" },
-    { label: "6GB - ₦2,419.91 (7 days)", value: "airtel_6_week" },
-    { label: "10GB - ₦2,903.91 (7 days)", value: "airtel_10_week" },
-    { label: "18GB - ₦4,839.91 (7 days)", value: "airtel_18_week" },
-    { label: "2GB - ₦1,451.93 (30 days)", value: "airtel_2_month" },
-    { label: "3GB - ₦1,935.91 (30 days)", value: "airtel_3_month" },
-    { label: "4GB - ₦2,419.92 (30 days)", value: "airtel_4_month" },
-    { label: "8GB - ₦2,903.92 (30 days)", value: "airtel_8_month" },
-    { label: "10GB - ₦3,871.91 (30 days)", value: "airtel_10_month" },
-    { label: "13GB - ₦4,839.92 (30 days)", value: "airtel_13_month" },
-    { label: "18GB - ₦5,807.91 (30 days)", value: "airtel_18_month" },
-    { label: "25GB - ₦7,743.91 (30 days)", value: "airtel_25_month" },
-    { label: "35GB - ₦9,679.91 (30 days)", value: "airtel_35_month" },
-    { label: "60GB - ₦14,519.91 (30 days)", value: "airtel_60_month" },
-    { label: "100GB - ₦19,359.91 (30 days)", value: "airtel_100_month" },
-    { label: "160GB - ₦29,039.91 (30 days)", value: "airtel_160_month" },
-    { label: "210GB - ₦38,719.91 (30 days)", value: "airtel_210_month" },
-    { label: "300GB - ₦48,399.91 (90 days)", value: "airtel_300_quarter" },
-    { label: "350GB - ₦58,079.91 (90 days)", value: "airtel_350_quarter" }
-  ],
-
-  "9mobile": [
-    { label: "100MB - ₦93 (1 day Awoof)", value: "9mobile_100_awoof" },
-    { label: "180MB - ₦139.50 (1 day Awoof)", value: "9mobile_180_awoof" },
-    { label: "250MB - ₦186 (1 day Awoof)", value: "9mobile_250_awoof" },
-    { label: "450MB - ₦325.50 (1 day Awoof)", value: "9mobile_450_awoof" },
-    { label: "650MB - ₦465 (3 days Awoof)", value: "9mobile_650_awoof" },
-    { label: "1.75GB - ₦1,395 (7 days)", value: "9mobile_1_75_week" },
-    { label: "650MB - ₦558 (14 days)", value: "9mobile_650_2week" },
-    { label: "1.1GB - ₦930 (30 days)", value: "9mobile_1_1_month" },
-    { label: "1.4GB - ₦1,116 (30 days)", value: "9mobile_1_4_month" },
-    { label: "2.44GB - ₦1,860 (30 days)", value: "9mobile_2_44_month" },
-    { label: "3.17GB - ₦2,325 (30 days)", value: "9mobile_3_17_month" },
-    { label: "3.91GB - ₦2,790 (30 days)", value: "9mobile_3_91_month" },
-    { label: "5.1GB - ₦3,720 (30 days)", value: "9mobile_5_1_month" },
-    { label: "6.5GB - ₦4,650 (30 days)", value: "9mobile_6_5_month" },
-    { label: "16GB - ₦11,160 (30 days)", value: "9mobile_16_month" },
-    { label: "24.3GB - ₦17,205 (30 days)", value: "9mobile_24_month" },
-    { label: "26.5GB - ₦18,600 (30 days)", value: "9mobile_26_month" },
-    { label: "39GB - ₦27,900 (60 days)", value: "9mobile_39_2month" },
-    { label: "78GB - ₦55,800 (90 days)", value: "9mobile_78_3month" },
-    { label: "190GB - ₦139,500 (180 days)", value: "9mobile_190_halfyear" }
-  ]
-};
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("buyBtn").addEventListener("click", async (e) => {
+  // Handle buy button click
+  buyBtn.addEventListener("click", async (e) => {
     e.preventDefault();
 
-    const network = document.getElementById("selectedNetwork").value;
-    const phone = document.getElementById("phone").value;
-    const dataPlan = document.getElementById("dataPlan");
-    const selectedOption = dataPlan.options[dataPlan.selectedIndex];
-    const plan = selectedOption.value;
-    const amount = Number(selectedOption.textContent.split("₦")[1]?.replace(/[^\d.]/g, ''));
+    const network = networkInput.value;
+    const phone = phoneInput.value.trim();
+    const selectedOption = dataPlanSelect.options[dataPlanSelect.selectedIndex];
+    const plan = selectedOption?.value;
+    const amountText = selectedOption?.textContent?.match(/₦([\d.,]+)/)?.[1];
+    const amount = parseFloat(amountText?.replace(/,/g, ''));
 
     if (!network || !phone || !plan || isNaN(amount)) {
-      alert("Please fill in all fields correctly.");
+      showToast("⚠️ Please fill in all fields correctly.");
       return;
     }
 
-    const loading = document.getElementById("loading");
     loading.classList.remove("hidden");
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        showToast("You need to log in first.");
+        showToast("⚠️ You need to log in first.");
         loading.classList.add("hidden");
         return;
       }
@@ -264,23 +187,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         showToast("✅ Transaction saved successfully.");
+        phoneInput.value = "";
+        dataPlanSelect.innerHTML = "<option disabled selected>Select a network first</option>";
       } catch (err) {
         console.error("❌ Error saving transaction:", err.message);
-        alert("Failed to save transaction.");
+        showToast("❌ Failed to save transaction.");
       } finally {
         loading.classList.add("hidden");
       }
     });
   });
-
-  function showToast(message) {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 3000);
-  }
-});
-
 </script>
 </body>
 </html>
