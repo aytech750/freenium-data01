@@ -50,7 +50,9 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
   import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
- import { updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+  import { updateDoc, doc, getDoc, increment } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+
 
   const firebaseConfig = {
     apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
@@ -149,82 +151,110 @@
 
   // Handle buy button click
   buyBtn.addEventListener("click", async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const network = networkInput.value;
-    const phone = phoneInput.value.trim();
-    const selectedOption = dataPlanSelect.options[dataPlanSelect.selectedIndex];
-    const plan = selectedOption?.value;
-   const amount = parseFloat(selectedOption?.getAttribute("data-price"));
+  const network = networkInput.value;
+  const phone = phoneInput.value.trim();
+  const selectedOption = dataPlanSelect.options[dataPlanSelect.selectedIndex];
+  const plan = selectedOption?.value;
+  const amount = parseFloat(selectedOption?.getAttribute("data-price"));
 
-    if (!network || !phone || !plan || isNaN(amount)) {
-      showToast("⚠️ Please fill in all fields correctly.");
+  if (!network || !phone || !plan || isNaN(amount)) {
+    showToast("⚠️ Please fill in all fields correctly.");
+    return;
+  }
+
+  loading.classList.remove("hidden");
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      showToast("⚠️ You need to log in first.");
+      loading.classList.add("hidden");
       return;
     }
 
-    loading.classList.remove("hidden");
+    try {
+      const requestId = `data_${user.uid}_${Date.now()}`;
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        showToast("⚠️ You need to log in first.");
+      if (!userSnap.exists()) {
+        showToast("❌ User record not found.");
         loading.classList.add("hidden");
         return;
       }
 
-      try {
-       const requestId = `data_${user.uid}_${Date.now()}`;
-const docRef = await addDoc(collection(db, "transactions"), {
-  uid: user.uid,
-  type: "data",
-  network,
-  phone,
-  plan,
-  amount,
-  requestId,
-  status: "pending",
-  createdAt: serverTimestamp()
-});
+      const walletBalance = userSnap.data().wallet || 0;
 
-showToast("🔄 Processing data purchase...");
-
-// 🔁 Call backend
-const backendResponse = await fetch("https://freenium-data01.vercel.app/api/buy-data", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({ network, phone, plan, amount, requestId })
-});
-
-const result = await backendResponse.json();
-
-// 🔄 Prepare document ref for updating
-const transactionRef = doc(db, "transactions", docRef.id);
-
-if (result.ORDER_RECEIVED) {
-  showToast("✅ Data purchased successfully.");
-  await updateDoc(transactionRef, {
-    status: "success",
-    updatedAt: serverTimestamp()
-  });
-} else {
-  showToast("❌ " + result.message);
-  await updateDoc(transactionRef, {
-    status: "failed",
-    updatedAt: serverTimestamp()
-  });
-}
-
-        phoneInput.value = "";
-        dataPlanSelect.innerHTML = "<option disabled selected>Select a network first</option>";
-      } catch (err) {
-        console.error("❌ Error saving transaction:", err.message);
-        showToast("❌ Failed to save transaction.");
-      } finally {
+      if (walletBalance < amount) {
+        showToast("❌ Insufficient wallet balance.");
         loading.classList.add("hidden");
+        return;
       }
-    });
+
+      // ✅ Save transaction
+      const docRef = await addDoc(collection(db, "transactions"), {
+        uid: user.uid,
+        type: "data",
+        network,
+        phone,
+        plan,
+        amount,
+        requestId,
+        status: "pending",
+        createdAt: serverTimestamp()
+      });
+
+      showToast("✅ Transaction saved. Processing...");
+
+      // 🔁 Call backend
+      const backendResponse = await fetch("https://freenium-data01.vercel.app/api/buy-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ network, phone, plan, amount, requestId, uid: user.uid })
+      });
+
+      const result = await backendResponse.json();
+      const transactionRef = doc(db, "transactions", docRef.id);
+
+      if (result.ORDER_RECEIVED) {
+        // ✅ Success: update transaction + deduct wallet
+        await updateDoc(transactionRef, {
+          status: "success",
+          updatedAt: serverTimestamp()
+        });
+
+        await updateDoc(userRef, {
+          wallet: increment(-parseFloat(amount.toFixed(2)))
+        });
+
+        showToast("✅ Data purchased successfully.");
+      } else {
+        // ❌ Failed
+        await updateDoc(transactionRef, {
+          status: "failed",
+          updatedAt: serverTimestamp()
+        });
+
+        showToast("❌ " + result.message);
+      }
+
+      // 🎯 Reset UI
+      phoneInput.value = "";
+      dataPlanSelect.innerHTML = "<option disabled selected>Select a network first</option>";
+      document.querySelectorAll(".network").forEach(net => net.classList.remove("selected"));
+      networkInput.value = "";
+    } catch (err) {
+      console.error("❌ Error:", err.message);
+      showToast("❌ Failed to save transaction.");
+    } finally {
+      loading.classList.add("hidden");
+    }
   });
+});
+
 </script>
 </body>
 </html>
