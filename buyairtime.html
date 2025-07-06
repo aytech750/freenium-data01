@@ -49,7 +49,16 @@
 
  <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    updateDoc,
+    collection,
+    addDoc,
+    serverTimestamp,
+    increment
+  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
   import { getAuth } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
   const firebaseConfig = {
@@ -65,13 +74,19 @@
   const db = getFirestore(app);
   const auth = getAuth(app);
 
+  const networkMap = {
+    mtn: "01",
+    airtel: "02",
+    glo: "03",
+    etisalat: "04"
+  };
+
   window.selectedNetwork = function(divElement) {
-    const networks = document.querySelectorAll('.network');
-    networks.forEach(net => net.classList.remove('selected'));
+    document.querySelectorAll('.network').forEach(net => net.classList.remove('selected'));
     divElement.classList.add('selected');
     const selected = divElement.querySelector('img').dataset.network;
     document.getElementById('selectedNetwork').value = selected;
-    console.log("✅ Network Selected:", selected);
+    console.log("✅ Network selected:", selected);
   };
 
   function showToast(message) {
@@ -84,38 +99,33 @@
   document.getElementById("buyBtn").addEventListener("click", async (e) => {
     e.preventDefault();
 
-    const selectedNetwork = document.getElementById("selectedNetwork").value;
-    const networkMap = {
-  mtn: "mtn",
-  airtel: "airtel",
-  glo: "glo",
-  etisalat: "etisalat"
-};
-    const networkId = networkMap[selectedNetwork.toLowerCase()];
-
-    if (!networkId) {
-      alert("🚫 Invalid network selected");
-      return;
-    }
-
+    const selectedNetwork = document.getElementById("selectedNetwork").value.toLowerCase();
     const phone = document.getElementById("phone").value.trim();
     const amount = parseFloat(document.getElementById("amount").value);
 
     if (!selectedNetwork || !phone || isNaN(amount) || amount <= 0) {
-      alert("🚫 Please complete all fields correctly");
+      alert("🚫 Please complete all fields correctly.");
       return;
     }
-     const phoneRegex = /^0\d{10}$/;
-if (!phoneRegex.test(phone)) {
-  alert("📵 Invalid phone number format");
-  return;
-}
-// ✅ Optional confirmation dialog
-const confirmPurchase = confirm(`Confirm airtime purchase of ₦${amount} to ${phone}?`);
-if (!confirmPurchase) return;
+
+    const phoneRegex = /^0\d{10}$/;
+    if (!phoneRegex.test(phone)) {
+      alert("📵 Invalid phone number format.");
+      return;
+    }
+
+    const networkId = networkMap[selectedNetwork];
+    if (!networkId) {
+      alert("🚫 Invalid network selected.");
+      return;
+    }
+
+    const confirmPurchase = confirm(`Confirm airtime purchase of ₦${amount} to ${phone}?`);
+    if (!confirmPurchase) return;
+
     const user = auth.currentUser;
     if (!user) {
-      alert("❌ Please login to continue");
+      alert("❌ Please log in to continue.");
       return;
     }
 
@@ -128,10 +138,11 @@ if (!confirmPurchase) return;
       const wallet = userSnap.data().wallet || 0;
 
       if (wallet < amount) {
-        alert("🚫 Insufficient wallet balance");
+        alert("🚫 Insufficient wallet balance.");
         return;
       }
 
+      // Log transaction as pending
       await addDoc(collection(db, "transactions"), {
         uid,
         type: "airtime",
@@ -145,26 +156,23 @@ if (!confirmPurchase) return;
 
       document.getElementById("globalSpinner").classList.remove("hidden");
 
+      // 🚀 SEND TO BACKEND (make sure your backend reads these keys exactly!)
       const response = await fetch("https://freenium-data01.vercel.app/api/airtime", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          network: networkId,
-          mobile: phone,
-          amount,
+          MobileNetwork: networkId,
+          MobileNumber: phone,
+          Amount: amount,
           request_id: requestId
         })
       });
 
       const result = await response.json();
-      console.log("📡 CLUBKONNECT Response:", result);
+      console.log("📡 API Response:", result);
 
-      if (result.Status && result.Status.toLowerCase() === "successful") {
-        await updateDoc(userRef, {
-          wallet: increment(-amount)
-        });
+      if (result.Status?.toLowerCase() === "successful") {
+        await updateDoc(userRef, { wallet: increment(-amount) });
 
         await addDoc(collection(db, "transactions"), {
           uid,
@@ -184,12 +192,13 @@ if (!confirmPurchase) return;
 
     } catch (err) {
       console.error("🔥 Error:", err);
-      showToast("❌ Something went wrong");
+      showToast("❌ Something went wrong.");
     } finally {
       document.getElementById("globalSpinner").classList.add("hidden");
     }
   });
 </script>
+
 
 </body>
 </html>
