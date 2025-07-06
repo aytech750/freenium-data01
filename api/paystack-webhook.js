@@ -1,24 +1,25 @@
-import { initializeApp } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-import { cert } from "firebase-admin/app";
+const admin = require("firebase-admin");
+const crypto = require("crypto");
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_KEY); // Store JSON key in env
+if (!admin.apps.length) {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_KEY);
 
-const app = initializeApp({
-  credential: cert(serviceAccount),
-});
-const db = getFirestore(app);
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
-export default async function handler(req, res) {
+const db = admin.firestore();
+
+module.exports = async function handler(req, res) {
   const secret = process.env.PAYSTACK_SECRET_KEY;
-  const hash = req.headers['x-paystack-signature'];
-  const crypto = require('crypto');
-
+  const hash = req.headers["x-paystack-signature"];
   const rawBody = JSON.stringify(req.body);
+
   const expectedHash = crypto
-    .createHmac('sha512', secret)
+    .createHmac("sha512", secret)
     .update(rawBody)
-    .digest('hex');
+    .digest("hex");
 
   if (hash !== expectedHash) {
     return res.status(401).send("🔒 Unauthorized webhook");
@@ -32,7 +33,6 @@ export default async function handler(req, res) {
 
     console.log("✅ Payment Verified:", reference, "₦" + amount);
 
-    // 🔍 Find the payment record by reference
     const paymentQuery = await db
       .collection("payments")
       .where("reference", "==", reference)
@@ -47,13 +47,13 @@ export default async function handler(req, res) {
     const paymentDoc = paymentQuery.docs[0];
     const uid = paymentDoc.data().uid;
 
-    // 💰 Credit the user's wallet
+    // Credit wallet
     const userRef = db.collection("users").doc(uid);
     await userRef.update({
-      wallet: getFirestore.FieldValue.increment(amount),
+      wallet: admin.firestore.FieldValue.increment(amount),
     });
 
-    // 📝 Mark the payment as successful
+    // Update payment status
     await paymentDoc.ref.update({
       status: "success",
       credited: true,
@@ -64,4 +64,4 @@ export default async function handler(req, res) {
   }
 
   return res.status(200).send("Webhook handled");
-}
+};
