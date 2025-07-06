@@ -123,24 +123,26 @@
   window.selectedNetwork = selectedNetwork;
 
   // Populate dropdown
-  function populateDataPlans(network) {
-    dataPlanSelect.innerHTML = "";
+ function populateDataPlans(network) {
+  dataPlanSelect.innerHTML = "";
 
-    if (dataPlans[network]) {
-      dataPlans[network].forEach(plan => {
-        const option = document.createElement("option");
-        option.value = plan.value;
-        option.textContent = plan.label;
-        dataPlanSelect.appendChild(option);
-      });
-    } else {
+  if (dataPlans[network]) {
+    dataPlans[network].forEach(plan => {
       const option = document.createElement("option");
-      option.textContent = "Select a network first";
-      option.disabled = true;
-      option.selected = true;
+      option.value = plan.value;
+      option.textContent = `${plan.label} - ₦${plan.price}`;
+      option.setAttribute("data-price", plan.price); // ✅ add price attribute
       dataPlanSelect.appendChild(option);
-    }
+    });
+  } else {
+    const option = document.createElement("option");
+    option.textContent = "Select a network first";
+    option.disabled = true;
+    option.selected = true;
+    dataPlanSelect.appendChild(option);
   }
+}
+
 
   // Show toast
   function showToast(message) {
@@ -157,8 +159,7 @@
     const phone = phoneInput.value.trim();
     const selectedOption = dataPlanSelect.options[dataPlanSelect.selectedIndex];
     const plan = selectedOption?.value;
-    const amountText = selectedOption?.textContent?.match(/₦([\d.,]+)/)?.[1];
-    const amount = parseFloat(amountText?.replace(/,/g, ''));
+   const amount = parseFloat(selectedOption?.getAttribute("data-price"));
 
     if (!network || !phone || !plan || isNaN(amount)) {
       showToast("⚠️ Please fill in all fields correctly.");
