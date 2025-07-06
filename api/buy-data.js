@@ -56,6 +56,8 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error("🔥 Error purchasing data:", error.message);
+    console.log("📨 Clubkonnect Response:", resultText);
+
     return res.status(500).json({ success: false, error: error.message });
   }
 }
