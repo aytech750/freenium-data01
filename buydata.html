@@ -50,15 +50,15 @@
   // firebase.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
 
 const firebaseConfig = {
   apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
   authDomain: "freenium-data001.firebaseapp.com",
   projectId: "freenium-data001",
-  storageBucket: "freenium-data001.firebasestorage.app",
+  storageBucket: "freenium-data001.appspot.com",
   messagingSenderId: "867380700269",
   appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
 };
@@ -241,15 +241,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const loading = document.getElementById("loading");
+    loading.classList.remove("hidden");
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-       function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 3000);
-}
-
+        showToast("You need to log in first.");
+        loading.classList.add("hidden");
+        return;
       }
 
       try {
@@ -264,16 +263,24 @@ document.addEventListener("DOMContentLoaded", () => {
           createdAt: serverTimestamp()
         });
 
-        alert("✅ Transaction saved successfully to Firestore.");
+        showToast("✅ Transaction saved successfully.");
       } catch (err) {
         console.error("❌ Error saving transaction:", err.message);
         alert("Failed to save transaction.");
+      } finally {
+        loading.classList.add("hidden");
       }
     });
   });
+
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 3000);
+  }
 });
 
-  
 </script>
 </body>
 </html>
