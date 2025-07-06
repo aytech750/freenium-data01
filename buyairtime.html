@@ -171,7 +171,7 @@
       const result = await response.json();
       console.log("📡 API Response:", result);
 
-        if (result.Status?.toLowerCase().includes("success")) {
+       if (result.statuscode === "100" || result.status?.toLowerCase() === "order_received") {
         await updateDoc(userRef, { wallet: increment(-amount) });
 
         await addDoc(collection(db, "transactions"), {
