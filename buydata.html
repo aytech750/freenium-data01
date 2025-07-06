@@ -1,147 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">  
-  <head>
+<html lang="en">
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Buy Data - FREENIUM DATA</title>
   <link rel="stylesheet" href="data.css" />
-   <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
 </head>
 <body>
 <section class="buy-data-section">
   <div class="data-container">
-  <h2>Buy Data</h2>
-  <h3>Select Network</h3>
+    <h2>Buy Data</h2>
+    <h3>Select Network</h3>
 
-  <div class="network" onclick="selectedNetwork(this)">
-    <img src="https://i.imgur.com/nqB32k8.png" alt="MTN" data-network="MTN" />
-  </div>
-
-  <div class="network" onclick="selectedNetwork(this)">
-    <img src="https://i.imgur.com/FXvtyZZ.png" alt="Airtel" data-network="Airtel" />
-  </div>
-
-  <div class="network" onclick="selectedNetwork(this)">
-    <img src="https://i.imgur.com/mgjfAJr.jpeg" alt="Glo" data-network="Glo" />
-  </div>
-
-  <div class="network" onclick="selectedNetwork(this)">
-    <img src="https://i.imgur.com/XKy0ckO.jpeg" alt="9mobile" data-network="9mobile" />
-  </div>
-
-  <!-- Hidden input to store the selected value -->
-  <input type="hidden" id="selectedNetwork">
-</div>
-    <form id="data-form">
-      <input type="tel" id="phone" placeholder="Enter Phone Number" required />
-      
-      <label for="dataPlan">Select Data Plan</label>
-      <select id="dataPlan" required>
-        <option value="" disabled selected>Select a network first</option>
-      </select>
-       <button id="buyBtn" type="submit">Buy Now</button>
-
-      <a href="dashboard.html" class="back-arrow">&lt; PREVIOUS</a>
-    </form>
-
-    <div class="loading hidden" id="loading">
-      <div class="spinner"></div>
-      Processing...
+    <div class="network" onclick="selectedNetwork(this)">
+      <img src="https://i.imgur.com/nqB32k8.png" alt="MTN" data-network="MTN" />
+    </div>
+    <div class="network" onclick="selectedNetwork(this)">
+      <img src="https://i.imgur.com/FXvtyZZ.png" alt="Airtel" data-network="Airtel" />
+    </div>
+    <div class="network" onclick="selectedNetwork(this)">
+      <img src="https://i.imgur.com/mgjfAJr.jpeg" alt="Glo" data-network="Glo" />
+    </div>
+    <div class="network" onclick="selectedNetwork(this)">
+      <img src="https://i.imgur.com/XKy0ckO.jpeg" alt="9mobile" data-network="9mobile" />
     </div>
 
-    <div id="toast" class="toast">Transaction Successful</div>
+    <input type="hidden" id="selectedNetwork">
   </div>
+
+  <form id="data-form">
+    <input type="tel" id="phone" placeholder="Enter Phone Number" required />
+    <label for="dataPlan">Select Data Plan</label>
+    <select id="dataPlan" required>
+      <option value="" disabled selected>Select a network first</option>
+    </select>
+    <button id="buyBtn" type="submit">Buy Now</button>
+    <a href="dashboard.html" class="back-arrow">&lt; PREVIOUS</a>
+  </form>
+
+  <div class="loading hidden" id="loading">
+    <div class="spinner"></div>
+    Processing...
+  </div>
+
+  <div id="toast" class="toast">Transaction Successful</div>
 </section>
+<script type="module">
+  // firebase.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
-<script>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+  authDomain: "freenium-data001.firebaseapp.com",
+  projectId: "freenium-data001",
+  storageBucket: "freenium-data001.firebasestorage.app",
+  messagingSenderId: "867380700269",
+  appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+export { auth, db };
   function selectedNetwork(divElement) {
-    // Remove selected from all
-    const networks = document.querySelectorAll('.network');
-    networks.forEach(net => net.classList.remove('selected'));
-
-    // Add selected to clicked one
+    document.querySelectorAll('.network').forEach(net => net.classList.remove('selected'));
     divElement.classList.add('selected');
 
-    // Get the image inside the clicked div
     const img = divElement.querySelector('img');
     const selected = img.getAttribute('data-network');
-
-    // Save to hidden input
     document.getElementById('selectedNetwork').value = selected;
-
-    console.log("Selected Network:", selected); // For testing
-  }
-  // To show the toast when transaction is successful
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3000);
-}
-  // All your data plans mapped by network
-  const dataPlans = {
-    MTN: [
-      { label: "500MB - ₦150", value: "mtn_500mb" },
-      { label: "1GB - ₦300", value: "mtn_1gb" },
-      { label: "2GB - ₦500", value: "mtn_2gb" }
-    ],
-    Airtel: [
-      { label: "500MB - ₦200", value: "airtel_500mb" },
-      { label: "1.5GB - ₦500", value: "airtel_1_5gb" },
-      { label: "3GB - ₦900", value: "airtel_3gb" }
-    ],
-    Glo: [
-      { label: "1GB - ₦250", value: "glo_1gb" },
-      { label: "2.5GB - ₦600", value: "glo_2_5gb" },
-      { label: "5GB - ₦1000", value: "glo_5gb" }
-    ],
-    "9mobile": [
-      { label: "1GB - ₦300", value: "9mobile_1gb" },
-      { label: "2GB - ₦600", value: "9mobile_2gb" },
-      { label: "4.5GB - ₦1100", value: "9mobile_4_5gb" }
-    ]
-  };
-
-  function selectedNetwork(divElement) {
-    // Remove previous selection
-    const networks = document.querySelectorAll('.network');
-    networks.forEach(net => net.classList.remove('selected'));
-
-    // Highlight selected
-    divElement.classList.add('selected');
-
-    // Get network name
-    const img = divElement.querySelector('img');
-    const selected = img.getAttribute('data-network');
-
-    // Set hidden input
-    document.getElementById('selectedNetwork').value = selected;
-
-    // Load data plans for that network
     populateDataPlans(selected);
-
-    console.log("Selected Network:", selected);
   }
 
   function populateDataPlans(network) {
     const dataPlanSelect = document.getElementById("dataPlan");
-
-    // Clear previous options
     dataPlanSelect.innerHTML = "";
 
-    // If valid network, load plans
     if (dataPlans[network]) {
       dataPlans[network].forEach(plan => {
         const option = document.createElement("option");
         option.value = plan.value;
-        option.textContent = plan.label;
+        option.textContent = plan.label; // 💡 You can change the label price here to apply your custom price
         dataPlanSelect.appendChild(option);
       });
     } else {
-      // If nothing selected
       const option = document.createElement("option");
       option.textContent = "Select a network first";
       option.disabled = true;
@@ -150,40 +98,135 @@ function showToast(message) {
     }
   }
 
-</script>
- <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+ const dataPlans = {
+  MTN: [
+    { label: "500MB - ₦440 (7/14 days - SME)", value: "mtn_470" },
+    { label: "1GB - ₦710 (7/14 days - SME)", value: "mtn_940" },
+    { label: "2GB - ₦1,330 (7/14 days - SME)", value: "mtn_1700" },
+    { label: "3GB - ₦2,050 (20/30 days - SME)", value: "mtn_2200" },
+    { label: "5GB - ₦2,690 (20/30 days - SME)", value: "mtn_3600" },
+    { label: "110MB - ₦97 (1 day - Awoof)", value: "mtn_98" },
+    { label: "230MB - ₦194 (1 day - Awoof)", value: "mtn_197" },
+    { label: "500MB - ₦339.50 (1 day - Awoof)", value: "mtn_345" },
+    { label: "1GB + 1.5min - ₦485 (1 day - Awoof)", value: "mtn_490" },
+    { label: "2.5GB - ₦873 (2 days - Awoof)", value: "mtn_900" },
+    { label: "3.2GB - ₦970 (2 days - Awoof)", value: "mtn_1000" },
+    { label: "1GB - ₦776 (7 days - Weekly)", value: "mtn_800" },
+    { label: "11GB - ₦3,395 (7 days - Weekly)", value: "mtn_3500" },
+    { label: "2GB + 2min - ₦1,455 (Monthly)", value: "mtn_1500" },
+    { label: "2.7GB + 2min - ₦1,940", value: "mtn_2000" },
+    { label: "3.5GB + 5min - ₦2,425", value: "mtn_2500" },
+    { label: "7GB - ₦3,395", value: "mtn_3500" },
+    { label: "10GB + 10min - ₦4,365", value: "mtn_4500" },
+    { label: "12.5GB - ₦5,335", value: "mtn_5500" },
+    { label: "16.5GB + 10min - ₦6,305", value: "mtn_6500" },
+    { label: "20GB - ₦7,275", value: "mtn_7500" },
+    { label: "25GB - ₦8,730", value: "mtn_9000" },
+    { label: "36GB - ₦10,670", value: "mtn_11000" },
+    { label: "75GB - ₦17,460", value: "mtn_18000" },
+    { label: "165GB - ₦33,950", value: "mtn_35000" },
+    { label: "150GB (60 days) - ₦38,800", value: "mtn_40000" },
+    { label: "480GB (90 days) - ₦87,300", value: "mtn_90000" }
+  ],
 
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
-    authDomain: "freenium-data001.firebaseapp.com",
-    projectId: "freenium-data001",
-    storageBucket: "freenium-data001.firebasestorage.app",
-    messagingSenderId: "867380700269",
-    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
-  };
+  Glo: [
+    { label: "1GB - ₦282 (3 days - SME)", value: "glo_1000_11" },
+    { label: "3GB - ₦846 (3 days - SME)", value: "glo_3000_11" },
+    { label: "5GB - ₦1,410 (3 days - SME)", value: "glo_5000_11" },
+    { label: "1GB - ₦329 (7 days - SME)", value: "glo_1000_12" },
+    { label: "3GB - ₦987 (7 days - SME)", value: "glo_3000_12" },
+    { label: "5GB - ₦1,645 (7 days - SME)", value: "glo_5000_12" },
+    { label: "Night 1GB - ₦329 (14 days)", value: "glo_1000_21" },
+    { label: "Night 3GB - ₦987 (14 days)", value: "glo_3000_21" },
+    { label: "Night 5GB - ₦1,645 (14 days)", value: "glo_5000_21" },
+    { label: "Night 10GB - ₦3,290 (14 days)", value: "glo_10000_21" },
+    { label: "200MB - ₦94", value: "glo_200" },
+    { label: "500MB - ₦235", value: "glo_500" },
+    { label: "1GB - ₦470", value: "glo_1000" },
+    { label: "2GB - ₦940", value: "glo_2000" },
+    { label: "3GB - ₦1,410", value: "glo_3000" },
+    { label: "5GB - ₦2,350", value: "glo_5000" },
+    { label: "10GB - ₦4,700", value: "glo_10000" },
+    { label: "125MB - ₦95.50 (Awoof)", value: "glo_125_awoof" },
+    { label: "260MB - ₦191 (Awoof)", value: "glo_260_awoof" },
+    { label: "1.5GB - ₦477.50", value: "glo_1_5" },
+    { label: "2.6GB - ₦955", value: "glo_2_6" },
+    { label: "5GB - ₦1,432.50", value: "glo_5" },
+    { label: "6.15GB - ₦1,910", value: "glo_6_15" },
+    { label: "7.5GB - ₦2,387.50", value: "glo_7_5" },
+    { label: "10GB - ₦2,865", value: "glo_10" },
+    { label: "12.5GB - ₦3,820", value: "glo_12_5" },
+    { label: "16GB - ₦4,775", value: "glo_16" },
+    { label: "28GB - ₦7,640", value: "glo_28" },
+    { label: "38GB - ₦9,550", value: "glo_38" },
+    { label: "64GB - ₦14,325", value: "glo_64" },
+    { label: "107GB - ₦19,100", value: "glo_107" },
+    { label: "2GB - ₦477.50 (1 day Awoof)", value: "glo_2_day" },
+    { label: "6GB - ₦1,432.50 (7 days)", value: "glo_6_week" },
+    { label: "2.5GB - ₦477.50 (Weekend)", value: "glo_2_5_weekend" },
+    { label: "875MB - ₦191 (Sunday only)", value: "glo_875_sun" },
+    { label: "165GB - ₦28,650", value: "glo_165" },
+    { label: "220GB - ₦34,380", value: "glo_220" },
+    { label: "320GB - ₦47,750", value: "glo_320" },
+    { label: "380GB - ₦57,300", value: "glo_380" },
+    { label: "475GB - ₦71,625", value: "glo_475" }
+  ],
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-</script>
-<script type="module">
-  import { db, auth } from './firebase.js';
-  import {
-    collection,
-    addDoc,
-    serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-  import {
-    onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  Airtel: [
+    { label: "1GB - ₦483.91 (1 day Awoof)", value: "airtel_1_awoof" },
+    { label: "1.5GB - ₦580.71 (2 days Awoof)", value: "airtel_1_5_awoof" },
+    { label: "2GB - ₦725.91 (2 days Awoof)", value: "airtel_2_awoof" },
+    { label: "3GB - ₦967.91 (2 days Awoof)", value: "airtel_3_awoof" },
+    { label: "5GB - ₦1,451.91 (2 days Awoof)", value: "airtel_5_awoof" },
+    { label: "500MB - ₦483.92 (7 days)", value: "airtel_500_week" },
+    { label: "1GB - ₦774.31 (7 days)", value: "airtel_1_week" },
+    { label: "1.5GB - ₦967.92 (7 days)", value: "airtel_1_5_week" },
+    { label: "3.5GB - ₦1,451.92 (7 days)", value: "airtel_3_5_week" },
+    { label: "6GB - ₦2,419.91 (7 days)", value: "airtel_6_week" },
+    { label: "10GB - ₦2,903.91 (7 days)", value: "airtel_10_week" },
+    { label: "18GB - ₦4,839.91 (7 days)", value: "airtel_18_week" },
+    { label: "2GB - ₦1,451.93 (30 days)", value: "airtel_2_month" },
+    { label: "3GB - ₦1,935.91 (30 days)", value: "airtel_3_month" },
+    { label: "4GB - ₦2,419.92 (30 days)", value: "airtel_4_month" },
+    { label: "8GB - ₦2,903.92 (30 days)", value: "airtel_8_month" },
+    { label: "10GB - ₦3,871.91 (30 days)", value: "airtel_10_month" },
+    { label: "13GB - ₦4,839.92 (30 days)", value: "airtel_13_month" },
+    { label: "18GB - ₦5,807.91 (30 days)", value: "airtel_18_month" },
+    { label: "25GB - ₦7,743.91 (30 days)", value: "airtel_25_month" },
+    { label: "35GB - ₦9,679.91 (30 days)", value: "airtel_35_month" },
+    { label: "60GB - ₦14,519.91 (30 days)", value: "airtel_60_month" },
+    { label: "100GB - ₦19,359.91 (30 days)", value: "airtel_100_month" },
+    { label: "160GB - ₦29,039.91 (30 days)", value: "airtel_160_month" },
+    { label: "210GB - ₦38,719.91 (30 days)", value: "airtel_210_month" },
+    { label: "300GB - ₦48,399.91 (90 days)", value: "airtel_300_quarter" },
+    { label: "350GB - ₦58,079.91 (90 days)", value: "airtel_350_quarter" }
+  ],
 
-  const buyBtn = document.getElementById("buyBtn");
-
-  buyBtn.addEventListener("click", async (e) => {
+  "9mobile": [
+    { label: "100MB - ₦93 (1 day Awoof)", value: "9mobile_100_awoof" },
+    { label: "180MB - ₦139.50 (1 day Awoof)", value: "9mobile_180_awoof" },
+    { label: "250MB - ₦186 (1 day Awoof)", value: "9mobile_250_awoof" },
+    { label: "450MB - ₦325.50 (1 day Awoof)", value: "9mobile_450_awoof" },
+    { label: "650MB - ₦465 (3 days Awoof)", value: "9mobile_650_awoof" },
+    { label: "1.75GB - ₦1,395 (7 days)", value: "9mobile_1_75_week" },
+    { label: "650MB - ₦558 (14 days)", value: "9mobile_650_2week" },
+    { label: "1.1GB - ₦930 (30 days)", value: "9mobile_1_1_month" },
+    { label: "1.4GB - ₦1,116 (30 days)", value: "9mobile_1_4_month" },
+    { label: "2.44GB - ₦1,860 (30 days)", value: "9mobile_2_44_month" },
+    { label: "3.17GB - ₦2,325 (30 days)", value: "9mobile_3_17_month" },
+    { label: "3.91GB - ₦2,790 (30 days)", value: "9mobile_3_91_month" },
+    { label: "5.1GB - ₦3,720 (30 days)", value: "9mobile_5_1_month" },
+    { label: "6.5GB - ₦4,650 (30 days)", value: "9mobile_6_5_month" },
+    { label: "16GB - ₦11,160 (30 days)", value: "9mobile_16_month" },
+    { label: "24.3GB - ₦17,205 (30 days)", value: "9mobile_24_month" },
+    { label: "26.5GB - ₦18,600 (30 days)", value: "9mobile_26_month" },
+    { label: "39GB - ₦27,900 (60 days)", value: "9mobile_39_2month" },
+    { label: "78GB - ₦55,800 (90 days)", value: "9mobile_78_3month" },
+    { label: "190GB - ₦139,500 (180 days)", value: "9mobile_190_halfyear" }
+  ]
+};
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("buyBtn").addEventListener("click", async (e) => {
     e.preventDefault();
 
     const network = document.getElementById("selectedNetwork").value;
@@ -191,19 +234,22 @@ function showToast(message) {
     const dataPlan = document.getElementById("dataPlan");
     const selectedOption = dataPlan.options[dataPlan.selectedIndex];
     const plan = selectedOption.value;
-    const amount = Number(selectedOption.textContent.split("₦")[1].trim());
+    const amount = Number(selectedOption.textContent.split("₦")[1]?.replace(/[^\d.]/g, ''));
 
-    // Validate inputs
     if (!network || !phone || !plan || isNaN(amount)) {
       alert("Please fill in all fields correctly.");
       return;
     }
 
-    // Check if user is logged in
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        alert("You must be logged in to make a purchase.");
-        return;
+       function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 3000);
+}
+
       }
 
       try {
@@ -225,9 +271,9 @@ function showToast(message) {
       }
     });
   });
+});
+
   
 </script>
-
-
 </body>
 </html>
