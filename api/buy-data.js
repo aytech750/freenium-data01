@@ -68,11 +68,21 @@ export default async function handler(req, res) {
     } catch {
       parsedResponse = { raw: text }; // fallback to raw if not valid JSON
     }
+const successKeywords = ["order_received", "successful", "success"];
 
-    if (
-      parsedResponse.status?.toLowerCase() === "order_received" ||
-      text.toLowerCase().includes("order_received")
-    ) {
+const isSuccess = successKeywords.some(keyword =>
+  text.toLowerCase().includes(keyword)
+);
+
+if (isSuccess) {
+  return res.status(200).json({
+    ORDER_RECEIVED: true,
+    message: "✅ Data purchase successful",
+    data: parsedResponse
+  });
+}
+
+    {
       return res.status(200).json({
         ORDER_RECEIVED: true,
         message: "✅ Data purchase successful",
