@@ -32,6 +32,9 @@ module.exports = async function handler(req, res) {
     const amount = event.data.amount / 100;
 
     console.log("✅ Payment Verified:", reference, "₦" + amount);
+    console.log("📥 Webhook Event:", event.event);
+    console.log("🧾 Payment Data:", event.data);
+    console.log("🔍 Looking for reference:", reference);
 
     const paymentQuery = await db
       .collection("payments")
@@ -47,13 +50,13 @@ module.exports = async function handler(req, res) {
     const paymentDoc = paymentQuery.docs[0];
     const uid = paymentDoc.data().uid;
 
-    // Credit wallet
+    // ✅ Credit wallet
     const userRef = db.collection("users").doc(uid);
     await userRef.update({
       wallet: admin.firestore.FieldValue.increment(amount),
     });
 
-    // Update payment status
+    // ✅ Update payment status
     await paymentDoc.ref.update({
       status: "success",
       credited: true,
@@ -64,4 +67,9 @@ module.exports = async function handler(req, res) {
   }
 
   return res.status(200).send("Webhook handled");
+};
+module.exports.config = {
+  api: {
+    bodyParser: false,
+  },
 };
