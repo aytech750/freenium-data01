@@ -423,14 +423,16 @@
 #fund-wallet-modal .modal-content {
   background-color: #1f2937;
   color: #fff;
-  padding: 30px 20px;
+  padding: 30px 10px;
   border-radius: 10px;
   width: 90%;
   max-width: 400px;
   text-align: center;
-  position: relative;
+  position: absolute;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   animation: slideIn 0.3s ease-out;
+  margin-top: 100px;
+  margin-left: 200px;
 }
 
 /* 📝 Input Field */
@@ -504,6 +506,7 @@
   font-size: 1rem;
   color: #444;
   pointer-events: none;
+  top: 10px;
 }
 
 #fund-amount {
