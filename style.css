@@ -494,27 +494,22 @@
 }
 .amount-wrapper {
   position: relative;
-  width: 100%;
-  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
 }
 
-.amount-wrapper .naira-icon {
+.naira-icon {
   position: absolute;
-  left: 12px;
-  top: 70%;
-  transform: translateY(-50%);
-  color: #aaa;
+  left: 10px;
   font-size: 1rem;
+  color: #444;
   pointer-events: none;
 }
 
-.amount-wrapper input {
+#fund-amount {
+  padding-left: 25px; /* creates space for ₦ */
+  height: 40px;
+  font-size: 1rem;
   width: 100%;
-  padding: 10px 40px 10px 50px; /* Left padding to make space for ₦ */
-  background: #374151;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
   box-sizing: border-box;
 }
-
