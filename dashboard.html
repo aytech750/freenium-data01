@@ -138,7 +138,6 @@
     <button onclick="window.print()">Print Receipt</button>
   </div>
 </div>
-  </section>
   </main>
 
   <!-- Bottom Navigation -->
@@ -185,94 +184,76 @@
     sideMenu.classList.remove("active");
   });
  
- auth.onAuthStateChanged(user => {
-  if (user) {
-    const uid = user.uid;
+ auth.onAuthStateChanged((user) => {
+  if (!user) {
+    window.location.href = "index.html";
+  } else if (!user.emailVerified) {
+    alert("Please verify your email before accessing the dashboard.");
+    auth.signOut();
+    window.location.href = "index.html";
+  } else {
+    // ✅ Now safe to use user.email and user.uid
     const email = user.email;
+    const uid = user.uid;
 
-    // Set email anywhere it's needed
     const emailElement = document.getElementById("user-email");
     if (emailElement) emailElement.textContent = email;
 
-    // Get user info from Firestore
-    db.collection("users").doc(uid).get()
-      .then(doc => {
-        if (doc.exists) {
-          const data = doc.data();
-          // Fetch and display transactions
-db.collection("transactions")
-  .where("uid", "==", uid)
-  .orderBy("timestamp", "desc")
-  .limit(20)
-  .get()
-  .then(querySnapshot => {
-    const tbody = document.getElementById("transaction-body");
-    tbody.innerHTML = ""; // clear any existing rows
+    // Load user profile
+ db.collection("users").doc(uid).get()
+  .then(doc => {
+    if (doc.exists) {
+      const data = doc.data();
 
-    if (querySnapshot.empty) {
-      tbody.innerHTML = "<tr><td colspan='4'>No transactions found</td></tr>";
+      // Name
+      const name = data.name || "Welcome";
+      document.getElementById("userName").textContent = name;
+
+      // Wallet
+      const wallet = data.wallet || 0;
+      document.getElementById("walletBalance").textContent = parseFloat(wallet).toFixed(2);
+
+      // ✅ Load transaction history
+      db.collection("transactions")
+        .where("uid", "==", uid)
+        .orderBy("timestamp", "desc")
+        .limit(20)
+        .get()
+        .then(querySnapshot => {
+          const tbody = document.getElementById("transaction-body");
+          tbody.innerHTML = "";
+          if (querySnapshot.empty) {
+            tbody.innerHTML = "<tr><td colspan='4'>No transactions found</td></tr>";
+          } else {
+            querySnapshot.forEach(doc => {
+              const data = doc.data();
+              const date = data.timestamp?.toDate().toLocaleString() || "N/A";
+              const type = data.type || "N/A";
+              const amount = data.amount || 0;
+              const status = data.status || "Pending";
+              const row = `
+                <tr>
+                  <td>${date}</td>
+                  <td>${type}</td>
+                  <td>₦${parseFloat(amount).toFixed(2)}</td>
+                  <td>${status}</td>
+                </tr>
+              `;
+              tbody.innerHTML += row;
+            });
+          }
+        });
+
     } else {
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        const date = data.timestamp?.toDate().toLocaleString() || "N/A";
-        const type = data.type || "N/A";
-        const amount = data.amount || 0;
-        const status = data.status || "Pending";
-
-        const row = `
-          <tr>
-            <td>${date}</td>
-            <td>${type}</td>
-            <td>₦${parseFloat(amount).toFixed(2)}</td>
-            <td>${status}</td>
-          </tr>
-        `;
-        tbody.innerHTML += row;
-      });
+      console.warn("User document not found.");
+      showToast("Profile not found");
     }
   })
-  .catch(error => {
-    console.error("Error fetching transactions:", error);
-    const tbody = document.getElementById("transaction-body");
-    tbody.innerHTML = "<tr><td colspan='4'>Error loading transactions</td></tr>";
+  .catch(err => {
+    console.error("Error getting user data:", err);
+    showToast("Failed to load user profile.");
   });
 
-
-          // Name (fallback to Freenium User)
-          const name = data.name || "Welcome";
-          document.getElementById("userName").textContent = name;
-
-          // Photo (fallback to default.jpg)
-          const photo = data.photo || "default.jpg";
-        
-          // Wallet
-          const wallet = data.wallet || 0;
-          document.getElementById("walletBalance").textContent = parseFloat(wallet).toFixed(2);
-        } else {
-          console.warn("User document does not exist.");
-        }
-      })
-      .catch(error => {
-        console.error("Error fetching user profile:", error);
-      });
-
-  } else {
-    // User not logged in
-    window.location.href = "index.html";
-  }
-});
-
-function logout() {
-  firebase.auth().signOut()
-    .then(() => {
-      // Logout successful
-      window.location.href = "index.html"; // Redirect to login/home page
-    })
-    .catch((error) => {
-      console.error("Logout failed:", error);
-      alert("Logout failed: " + error.message);
-    });
-  }
  </script>
  <!-- Paystack Script -->
 <script src="https://js.paystack.co/v1/inline.js"></script>
@@ -360,7 +341,9 @@ function logout() {
     showToast(result.message || "Wallet funded");
 
     if (result.success) {
-      showReceipt(reference, amount); // 👈 show the receipt modal here
+      showReceipt(reference, amount);
+      modal.style.display = "none";
+      fundAmountInput.value = "";
     }
   } catch (err) {
     console.error("Verification failed:", err);
@@ -368,6 +351,7 @@ function logout() {
     showToast("Verification failed. Try again.");
   }
 }
+
 function showReceipt(reference, amount) {
   document.getElementById("receipt-ref").textContent = reference;
   document.getElementById("receipt-amount").textContent = parseFloat(amount).toFixed(2);
@@ -388,7 +372,19 @@ document.getElementById("close-receipt").addEventListener("click", () => {
       toast.style.visibility = "hidden";
     }, 3000);
   }
-</script>
+  
+// ✅ Move logout function out here
+function logout() {
+  firebase.auth().signOut()
+    .then(() => {
+      window.location.href = "index.html";
+    })
+    .catch((error) => {
+      console.error("Logout failed:", error);
+      alert("Logout failed: " + error.message);
+    });
+}
 
+</script>
   </body>
   </html>

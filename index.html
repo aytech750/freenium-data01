@@ -167,20 +167,23 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       };
 
-      await db.collection("users").doc(uid).set(userData);
+     await db.collection("users").doc(uid).set(userData);
 
-      if (referrerCode) {
-        const refDoc = await db.collection("users").doc(referrerCode).get();
-        if (refDoc.exists) {
-          await db.collection("users").doc(referrerCode).update({
-            rewards: firebase.firestore.FieldValue.increment(500),
-            referrals: firebase.firestore.FieldValue.arrayUnion(uid)
-          });
-        }
-      }
+// ✅ Send verification email
+await cred.user.sendEmailVerification();
 
-      showToast("Signup successful 🎉");
-      window.location.href = "dashboard.html";
+if (referrerCode) {
+  const refDoc = await db.collection("users").doc(referrerCode).get();
+  if (refDoc.exists) {
+    await db.collection("users").doc(referrerCode).update({
+      rewards: firebase.firestore.FieldValue.increment(100),
+      referrals: firebase.firestore.FieldValue.arrayUnion(uid)
+    });
+  }
+}
+
+showToast("Signup successful 🎉 Check your email to verify your account!");
+window.location.href = "verify.html"; // Redirect them to a verification info page
 
     } catch (err) {
       showToast("Signup failed: " + err.message, "#f44336");
