@@ -126,6 +126,19 @@
         </table>
       </div>
     </section>
+    <!-- Receipt Modal -->
+<div id="receipt-modal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span id="close-receipt" style="cursor:pointer;">&times;</span>
+    <h3>Payment Receipt</h3>
+    <p><strong>Reference:</strong> <span id="receipt-ref"></span></p>
+    <p><strong>Amount:</strong> ₦<span id="receipt-amount"></span></p>
+    <p><strong>Status:</strong> <span id="receipt-status" style="color:green;">Successful</span></p>
+    <p><strong>Time:</strong> <span id="receipt-time"></span></p>
+    <button onclick="window.print()">Print Receipt</button>
+  </div>
+</div>
+  </section>
   </main>
 
   <!-- Bottom Navigation -->
@@ -281,68 +294,91 @@ function logout() {
     fundAmountInput.value = "";
   });
 
-  submitFund.addEventListener("click", async () => {
-    const amount = parseFloat(fundAmountInput.value);
-    if (!amount || amount < 100) {
-      alert("Enter a valid amount (minimum ₦100)");
-      return;
-    }
-
-    const user = firebase.auth().currentUser;
-    if (!user) return alert("You must be logged in");
-
-    const email = user.email;
-    const amountKobo = amount * 100;
-
-  let handler = PaystackPop.setup({
-  key: "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75",
-  email: email,
-  amount: amountKobo,
-  currency: "NGN",
-  metadata: {
-    custom_fields: [
-      {
-        display_name: "User ID",
-        variable_name: "uid",
-        value: user.uid
-      }
-    ]
-  },
-  callback: function (response) {
-    verifyPayment(response.reference, amount);
-  },
-  onClose: function () {
-    alert("Transaction was cancelled");
+ submitFund.addEventListener("click", async () => {
+  const amount = parseFloat(fundAmountInput.value);
+  if (!amount || amount < 100) {
+    alert("Enter a valid amount (minimum ₦100)");
+    return;
   }
-});
 
-    handler.openIframe();
+  const user = firebase.auth().currentUser;
+  if (!user) return alert("You must be logged in");
+
+  const email = user.email;
+  const amountKobo = amount * 100;
+
+  // 👇 STEP 1: Create reference + save pending payment
+  const reference = `ref_${user.uid}_${Date.now()}`;
+  await firebase.firestore().collection("payments").add({
+    uid: user.uid,
+    amount: amount,
+    status: "pending",
+    reference,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  async function verifyPayment(reference, amount) {
-    loadingText.style.display = "block";
-
-    try {
-      const res = await fetch("https://freenium-data01.vercel.app/api/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reference, amount })
-      });
-
-      const result = await res.json();
-      loadingText.style.display = "none";
-      showToast(result.message || "Wallet funded");
-
-      if (result.success) {
-        // Refresh wallet balance
-        location.reload();
-      }
-    } catch (err) {
-      console.error("Verification failed:", err);
-      loadingText.style.display = "none";
-      showToast("Verification failed. Try again.");
+  // 👇 STEP 2: Trigger Paystack
+  let handler = PaystackPop.setup({
+    key: "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75",
+    email: email,
+    amount: amountKobo,
+    currency: "NGN",
+    reference: reference, // ✅ use the same reference
+    metadata: {
+      custom_fields: [
+        {
+          display_name: "User ID",
+          variable_name: "uid",
+          value: user.uid
+        }
+      ]
+    },
+    callback: function (response) {
+      verifyPayment(reference, amount); // ✅ match with what we saved
+    },
+    onClose: function () {
+      alert("Transaction was cancelled");
     }
+  });
+
+  handler.openIframe();
+});
+
+
+  async function verifyPayment(reference, amount) {
+  loadingText.style.display = "block";
+
+  try {
+    const res = await fetch("https://freenium-data01.vercel.app/api/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reference, amount })
+    });
+
+    const result = await res.json();
+    loadingText.style.display = "none";
+    showToast(result.message || "Wallet funded");
+
+    if (result.success) {
+      showReceipt(reference, amount); // 👈 show the receipt modal here
+    }
+  } catch (err) {
+    console.error("Verification failed:", err);
+    loadingText.style.display = "none";
+    showToast("Verification failed. Try again.");
   }
+}
+function showReceipt(reference, amount) {
+  document.getElementById("receipt-ref").textContent = reference;
+  document.getElementById("receipt-amount").textContent = parseFloat(amount).toFixed(2);
+  document.getElementById("receipt-time").textContent = new Date().toLocaleString();
+  document.getElementById("receipt-modal").style.display = "block";
+}
+document.getElementById("close-receipt").addEventListener("click", () => {
+  document.getElementById("receipt-modal").style.display = "none";
+  location.reload(); // 👈 optionally reload after viewing receipt
+});
+
 
   function showToast(message) {
     const toast = document.getElementById("toast");
