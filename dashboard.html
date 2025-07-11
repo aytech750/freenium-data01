@@ -285,41 +285,78 @@
     const reference = `ref_${user.uid}_${Date.now()}`;
 
     // Save pending payment
-    await db.collection("payments").add({
+       await db.collection("payments").add({
       uid: user.uid,
       amount: amount,
       status: "pending",
       reference,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
+  });
+</script>
 
-    // Launch Paystack
+
+   <script src="https://js.paystack.co/v1/inline.js"></script>
+<script>
+  const paystackPublicKey = "pk_test_xxxxxxxxxx"; // replace with yours
+
+  function calculatePaystackTotal(amount) {
+    // Flat + percentage fee
+    const fee = amount >= 2500 ? amount * 0.015 + 100 : amount * 0.015;
+    return Math.ceil(amount + fee); // round up to nearest Naira
+  }
+
+  document.getElementById("fundForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const amountInput = document.getElementById("amountToFund");
+    const walletAmount = parseInt(amountInput.value); // What user wants to fund (e.g. 1000)
+
+    const totalWithFee = calculatePaystackTotal(walletAmount);
+
     const handler = PaystackPop.setup({
-      key: "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75",
-      email: email,
-      amount: amountKobo,
+      key: paystackPublicKey,
+      email: auth.currentUser.email,
+      amount: totalWithFee * 100, // in kobo
       currency: "NGN",
-      reference,
       metadata: {
         custom_fields: [
           {
             display_name: "User ID",
             variable_name: "uid",
-            value: user.uid
+            value: auth.currentUser.uid
+          },
+          {
+            display_name: "Wallet Topup (before fee)",
+            variable_name: "walletAmount",
+            value: walletAmount
           }
         ]
       },
-      callback: function () {
-        verifyPayment(reference, amount);
+      callback: function (response) {
+        fetch("/api/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reference: response.reference })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            alert("Wallet funded! ✅");
+            location.reload();
+          } else {
+            alert("Funding failed: " + data.message);
+          }
+        });
       },
       onClose: function () {
-        alert("Transaction was cancelled");
+        alert("Payment window closed");
       }
     });
 
     handler.openIframe();
   });
-
+</script>
+<script>
   // Verify Payment
   async function verifyPayment(reference, amount) {
     loadingText.style.display = "block";
@@ -372,18 +409,17 @@
       toast.style.visibility = "hidden";
     }, 3000);
   }
+function logout() {
+  auth.signOut()
+    .then(() => {
+      window.location.href = "index.html";
+    })
+    .catch((error) => {
+      console.error("Logout failed:", error);
+      alert("Logout failed: " + error.message);
+    });
+}
 
-  // Logout
-  function logout() {
-    auth.signOut()
-      .then(() => {
-        window.location.href = "index.html";
-      })
-      .catch((error) => {
-        console.error("Logout failed:", error);
-        alert("Logout failed: " + error.message);
-      });
-  }
 </script>
 </body>
 </html>
