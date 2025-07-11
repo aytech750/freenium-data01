@@ -65,13 +65,19 @@
     <span id="close-modal" style="cursor:pointer;">&times;</span>
     <h2>Freenium Data</h2>
     <h5>Fund Your Wallet</h5>
- <div class="amount-wrapper">
-  <span class="naira-icon">₦</span>
-  <input type="number" id="fund-amount" placeholder="Enter amount" min="100" />
-</div>
-<button id="submit-fund">Submit</button>
-<div id="fund-loading" style="display:none;">Processing...</div>
-</div>
+
+    <!-- ✅ Start of Form -->
+    <form id="fundForm">
+      <div class="amount-wrapper">
+        <span class="naira-icon">₦</span>
+        <input type="number" id="amountToFund" placeholder="Enter amount" min="100" required />
+      </div>
+      <button type="submit" id="submit-fund">Submit</button>
+    </form>
+    <!-- ✅ End of Form -->
+
+    <div id="fund-loading" style="display:none;">Processing...</div>
+  </div>
 </div>
 
 
@@ -157,269 +163,244 @@
 
 <!-- Main App Logic -->
 <script>
-  // Firebase Config
-  const firebaseConfig = {
-    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
-    authDomain: "freenium-data001.firebaseapp.com",
-    projectId: "freenium-data001",
-    storageBucket: "freenium-data001.appspot.com",
-    messagingSenderId: "867380700269",
-    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
-  };
+ // Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+  authDomain: "freenium-data001.firebaseapp.com",
+  projectId: "freenium-data001",
+  storageBucket: "freenium-data001.appspot.com",
+  messagingSenderId: "867380700269",
+  appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+};
 
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-  // Menu Toggle
-  const menuIcon = document.getElementById("menuIcon");
-  const closeIcon = document.getElementById("closeIcon");
-  const sideMenu = document.getElementById("sideMenu");
+const paystackPublicKey = "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75";
 
-  menuIcon.addEventListener("click", () => sideMenu.classList.add("active"));
-  closeIcon.addEventListener("click", () => sideMenu.classList.remove("active"));
+// Elements
+const menuIcon = document.getElementById("menuIcon");
+const closeIcon = document.getElementById("closeIcon");
+const sideMenu = document.getElementById("sideMenu");
+const fundBtn = document.getElementById("fundWalletBtn");
+const modal = document.getElementById("fund-wallet-modal");
+const closeModal = document.getElementById("close-modal");
+const fundForm = document.getElementById("fundForm");
+const amountInput = document.getElementById("amountToFund");
+const loadingText = document.getElementById("fund-loading");
+const fundAmountInput = document.getElementById("amountToFund");
 
-  // Fund Wallet Elements
-  const fundBtn = document.getElementById("fundWalletBtn");
-  const modal = document.getElementById("fund-wallet-modal");
-  const closeModal = document.getElementById("close-modal");
-  const submitFund = document.getElementById("submit-fund");
-  const fundAmountInput = document.getElementById("fund-amount");
-  const loadingText = document.getElementById("fund-loading");
+// Sidebar Menu Toggle
+menuIcon.addEventListener("click", () => sideMenu.classList.add("active"));
+closeIcon.addEventListener("click", () => sideMenu.classList.remove("active"));
 
-  fundBtn.addEventListener("click", () => {
-    modal.style.display = "block";
-  });
+// Fund Wallet Modal
+fundBtn.addEventListener("click", () => {
+  modal.style.display = "block";
+});
+closeModal.addEventListener("click", () => {
+  modal.style.display = "none";
+  amountInput.value = "";
+});
 
-  closeModal.addEventListener("click", () => {
-    modal.style.display = "none";
-    fundAmountInput.value = "";
-  });
+// Auth
+let currentUser = null;
 
-  // Auth State
-  auth.onAuthStateChanged(async (user) => {
-    if (!user) {
-      window.location.href = "index.html";
-      return;
-    }
-
-    if (!user.emailVerified) {
-      alert("Please verify your email before accessing the dashboard.");
-      await auth.signOut();
-      window.location.href = "index.html";
-      return;
-    }
-
-    const email = user.email;
-    const uid = user.uid;
-
-    document.getElementById("user-email").textContent = email;
-    const userEmailText = document.getElementById("user-email-text");
-  
-
-    try {
-      const userDoc = await db.collection("users").doc(uid).get();
-      if (!userDoc.exists) {
-        showToast("Profile not found");
-        return;
-      }
-
-      const userData = userDoc.data();
-      const name = userData.name || "Welcome";
-      const wallet = userData.wallet || 0;
-
-      document.getElementById("userName").textContent = name;
-      document.getElementById("walletBalance").textContent = parseFloat(wallet).toFixed(2);
-
-      // Load Transactions
-      const txnSnapshot = await db.collection("transactions")
-        .where("uid", "==", uid)
-        .orderBy("timestamp", "desc")
-        .limit(20)
-        .get();
-
-      const tbody = document.getElementById("transaction-body");
-      tbody.innerHTML = "";
-
-      if (txnSnapshot.empty) {
-        tbody.innerHTML = "<tr><td colspan='4'>No transactions found</td></tr>";
-      } else {
-        txnSnapshot.forEach(doc => {
-          const tx = doc.data();
-          const date = tx.timestamp?.toDate().toLocaleString() || "N/A";
-          const type = tx.type || "N/A";
-          const amount = tx.amount || 0;
-          const status = tx.status || "Pending";
-
-          const row = `
-            <tr>
-              <td>${date}</td>
-              <td>${type}</td>
-              <td>₦${parseFloat(amount).toFixed(2)}</td>
-              <td>${status}</td>
-            </tr>
-          `;
-          tbody.innerHTML += row;
-        });
-      }
-    } catch (err) {
-      console.error("Error loading user:", err);
-      showToast("Failed to load user data.");
-    }
-  });
-
-  // Fund Wallet Submit
-  submitFund.addEventListener("click", async () => {
-    const amount = parseFloat(fundAmountInput.value);
-    if (!amount || amount < 100) {
-      alert("Enter a valid amount (minimum ₦100)");
-      return;
-    }
-
-    const user = firebase.auth().currentUser;
-    if (!user) return alert("You must be logged in");
-
-    const email = user.email;
-    const amountKobo = amount * 100;
-    const reference = `ref_${user.uid}_${Date.now()}`;
-
-    // Save pending payment
-       await db.collection("payments").add({
-      uid: user.uid,
-      amount: amount,
-      status: "pending",
-      reference,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  });
-</script>
-
-
-   <script src="https://js.paystack.co/v1/inline.js"></script>
-<script>
-  const paystackPublicKey = "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75"; // replace with yours
-
-  function calculatePaystackTotal(amount) {
-    // Flat + percentage fee
-    const fee = amount >= 2500 ? amount * 0.015 + 100 : amount * 0.015;
-    return Math.ceil(amount + fee); // round up to nearest Naira
+auth.onAuthStateChanged(async (user) => {
+  if (!user) {
+    window.location.href = "index.html";
+    return;
   }
 
-  document.getElementById("fundForm").addEventListener("submit", function (e) {
-    e.preventDefault();
-    const amountInput = document.getElementById("amountToFund");
-    const walletAmount = parseInt(amountInput.value); // What user wants to fund (e.g. 1000)
+  if (!user.emailVerified) {
+    alert("Please verify your email before accessing the dashboard.");
+    await auth.signOut();
+    window.location.href = "index.html";
+    return;
+  }
 
-    const totalWithFee = calculatePaystackTotal(walletAmount);
+  currentUser = user;
 
-    const handler = PaystackPop.setup({
-      key: paystackPublicKey,
-      email: auth.currentUser.email,
-      amount: totalWithFee * 100, // in kobo
-      currency: "NGN",
-      metadata: {
-        custom_fields: [
-          {
-            display_name: "User ID",
-            variable_name: "uid",
-            value: auth.currentUser.uid
-          },
-          {
-            display_name: "Wallet Topup (before fee)",
-            variable_name: "walletAmount",
-            value: walletAmount
-          }
-        ]
-      },
-      callback: function (response) {
-        fetch("/api/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reference: response.reference })
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            alert("Wallet funded! ✅");
-            location.reload();
-          } else {
-            alert("Funding failed: " + data.message);
-          }
-        });
-      },
-      onClose: function () {
-        alert("Payment window closed");
-      }
-    });
+  document.getElementById("user-email").textContent = user.email;
 
-    handler.openIframe();
-  });
-</script>
-<script>
-  // Verify Payment
-  async function verifyPayment(reference, amount) {
-    loadingText.style.display = "block";
+  try {
+    const userDoc = await db.collection("users").doc(user.uid).get();
+    if (!userDoc.exists) {
+      showToast("Profile not found");
+      return;
+    }
 
-    try {
-      const res = await fetch("https://freenium-data01.vercel.app/api/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reference, amount })
+    const userData = userDoc.data();
+    document.getElementById("userName").textContent = userData.name || "Welcome";
+    document.getElementById("walletBalance").textContent = parseFloat(userData.wallet || 0).toFixed(2);
+
+    loadTransactions(user.uid);
+  } catch (err) {
+    console.error("Error loading user:", err);
+    showToast("Failed to load user data.");
+  }
+});
+
+// Load Transactions
+async function loadTransactions(uid) {
+  try {
+    const snapshot = await db.collection("transactions")
+      .where("uid", "==", uid)
+      .orderBy("timestamp", "desc")
+      .limit(20)
+      .get();
+
+    const tbody = document.getElementById("transaction-body");
+    tbody.innerHTML = "";
+
+    if (snapshot.empty) {
+      tbody.innerHTML = "<tr><td colspan='4'>No transactions found</td></tr>";
+    } else {
+      snapshot.forEach(doc => {
+        const tx = doc.data();
+        const date = tx.timestamp?.toDate().toLocaleString() || "N/A";
+        const type = tx.type || "N/A";
+        const amount = parseFloat(tx.amount || 0).toFixed(2);
+        const status = tx.status || "Pending";
+
+        const row = `
+          <tr>
+            <td>${date}</td>
+            <td>${type}</td>
+            <td>₦${amount}</td>
+            <td>${status}</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
       });
-
-      const result = await res.json();
-      loadingText.style.display = "none";
-
-      showToast(result.message || "Wallet funded");
-
-      if (result.success) {
-        showReceipt(reference, amount);
-        modal.style.display = "none";
-        fundAmountInput.value = "";
-        setTimeout(() => window.location.reload(), 3000);
-      }
-    } catch (err) {
-      console.error("Verification failed:", err);
-      loadingText.style.display = "none";
-      showToast("Verification failed. Try again.");
     }
+  } catch (err) {
+    console.error("Failed to load transactions:", err);
   }
-
-  // Show Receipt
-  function showReceipt(reference, amount) {
-    document.getElementById("receipt-ref").textContent = reference;
-    document.getElementById("receipt-amount").textContent = parseFloat(amount).toFixed(2);
-    document.getElementById("receipt-time").textContent = new Date().toLocaleString();
-    document.getElementById("receipt-modal").style.display = "block";
-  }
-
-  // Close Receipt
-  document.getElementById("close-receipt").addEventListener("click", () => {
-    document.getElementById("receipt-modal").style.display = "none";
-    location.reload();
-  });
-
-  // Toast Notification
-  function showToast(message) {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.style.visibility = "visible";
-    setTimeout(() => {
-      toast.style.visibility = "hidden";
-    }, 3000);
-  }
-function logout() {
-  auth.signOut()
-    .then(() => {
-      window.location.href = "index.html";
-    })
-    .catch((error) => {
-      console.error("Logout failed:", error);
-      alert("Logout failed: " + error.message);
-    });
 }
 
+// Handle Wallet Funding Form
+fundForm.addEventListener("submit", async function (e) {
+  e.preventDefault();
+
+  const amount = parseInt(amountInput.value);
+  if (!amount || amount < 100) {
+    alert("Minimum amount is ₦100");
+    return;
+  }
+
+  const totalWithFee = calculatePaystackTotal(amount);
+  const reference = `ref_${currentUser.uid}_${Date.now()}`;
+
+  // Save pending transaction
+  await db.collection("payments").add({
+    uid: currentUser.uid,
+    amount,
+    reference,
+    status: "pending",
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  // Launch Paystack
+  const handler = PaystackPop.setup({
+    key: paystackPublicKey,
+    email: currentUser.email,
+    amount: totalWithFee * 100, // Kobo
+    currency: "NGN",
+    metadata: {
+      custom_fields: [
+        {
+          display_name: "User ID",
+          variable_name: "uid",
+          value: currentUser.uid
+        },
+        {
+          display_name: "Wallet Topup",
+          variable_name: "walletAmount",
+          value: amount
+        }
+      ]
+    },
+    callback: function (response) {
+      verifyPayment(response.reference, amount);
+    },
+    onClose: function () {
+      alert("Payment window closed.");
+    }
+  });
+
+  handler.openIframe();
+});
+
+// Paystack Fee Calculation
+function calculatePaystackTotal(amount) {
+  const fee = amount >= 2500 ? amount * 0.015 + 100 : amount * 0.015;
+  return Math.ceil(amount + fee);
+}
+
+// Verify Payment
+async function verifyPayment(reference, amount) {
+  loadingText.style.display = "block";
+
+  try {
+    const res = await fetch("https://freenium-data01.vercel.app/api/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reference, amount })
+    });
+
+    const result = await res.json();
+    loadingText.style.display = "none";
+
+    if (result.success) {
+      showReceipt(reference, amount);
+      modal.style.display = "none";
+      fundAmountInput.value = "";
+      showToast("Wallet funded successfully!");
+      setTimeout(() => location.reload(), 3000);
+    } else {
+      showToast(result.message || "Verification failed.");
+    }
+  } catch (err) {
+    console.error("Error verifying:", err);
+    loadingText.style.display = "none";
+    showToast("Verification error. Try again.");
+  }
+}
+
+// Show Receipt Modal
+function showReceipt(reference, amount) {
+  document.getElementById("receipt-ref").textContent = reference;
+  document.getElementById("receipt-amount").textContent = parseFloat(amount).toFixed(2);
+  document.getElementById("receipt-time").textContent = new Date().toLocaleString();
+  document.getElementById("receipt-modal").style.display = "block";
+}
+
+document.getElementById("close-receipt").addEventListener("click", () => {
+  document.getElementById("receipt-modal").style.display = "none";
+  location.reload();
+});
+
+// Toast
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.style.visibility = "visible";
+  setTimeout(() => {
+    toast.style.visibility = "hidden";
+  }, 3000);
+}
+
+// Logout
+function logout() {
+  auth.signOut()
+    .then(() => window.location.href = "index.html")
+    .catch(err => {
+      console.error("Logout failed:", err);
+      alert("Logout failed: " + err.message);
+    });
+}
 </script>
 </body>
 </html>
