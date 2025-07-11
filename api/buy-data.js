@@ -1,28 +1,37 @@
+import admin from "firebase-admin";
+
+// ✅ Firebase Admin Initialization
+if (!admin.apps.length) {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_KEY);
+
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
+
+const db = admin.firestore();
+
+// 🔁 Clubkonnect Buy Data Handler
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const { network, phone, plan, amount, requestId } = req.body;
+  const { network, phone, plan, amount, requestId, userId } = req.body;
 
-  // ✅ Validate required fields
+  // ✅ Input Validation
   if (
-    !network || 
-    !phone || 
-    !plan || 
-    !amount || 
-    !requestId || 
-    typeof phone !== "string" || 
-    phone.trim() === ""
+    !network || !phone || !plan || !amount || !requestId || !userId ||
+    typeof phone !== "string" || phone.trim() === ""
   ) {
     return res.status(400).json({ error: "Missing or invalid required fields" });
   }
 
-  // 🔐 Credentials
-  const apiKey = process.env.CLUBKONNECT_API_KEY; // Set this in Vercel or .env
+  // 🔐 Clubkonnect Credentials
+  const apiKey = process.env.CLUBKONNECT_API_KEY;
   const userID = "CK101252894";
 
-  // 🧠 Map frontend network to Clubkonnect codes
+  // 📡 Map network names to Clubkonnect codes
   const networkMap = {
     MTN: "01",
     Glo: "02",
@@ -31,20 +40,21 @@ export default async function handler(req, res) {
   };
 
   const MobileNetwork = networkMap[network];
-
   if (!MobileNetwork) {
     return res.status(400).json({ error: "Invalid network name" });
   }
 
   const MobileNumber = phone.trim();
+  const DataPlan = plan;
+  const RequestID = requestId;
 
   const payload = new URLSearchParams({
     UserID: userID,
     APIKey: apiKey,
     MobileNetwork,
     MobileNumber,
-    DataPlan: plan,
-    RequestID: requestId
+    DataPlan,
+    RequestID
   });
 
   const url = "https://www.nellobytesystems.com/APIDatabundleV1.asp";
@@ -59,30 +69,48 @@ export default async function handler(req, res) {
     });
 
     const text = await response.text();
-
     console.log("📦 Clubkonnect Raw Response:", text);
 
     let parsedResponse = {};
     try {
-      parsedResponse = JSON.parse(text); // Clubkonnect sometimes returns JSON
+      parsedResponse = JSON.parse(text);
     } catch {
-      parsedResponse = { raw: text }; // fallback to raw if not valid JSON
+      parsedResponse = { raw: text };
     }
-const successKeywords = ["order_received", "successful", "success"];
 
-const isSuccess = successKeywords.some(keyword =>
-  text.toLowerCase().includes(keyword)
-);
+    const successKeywords = ["order_received", "successful", "success"];
+    const isSuccess = successKeywords.some(keyword =>
+      text.toLowerCase().includes(keyword)
+    );
 
-if (isSuccess) {
-  return res.status(200).json({
-    ORDER_RECEIVED: true,
-    message: "✅ Data purchase successful",
-    data: parsedResponse
-  });
-}
+    if (isSuccess) {
+      // 1️⃣ Save transaction to Firestore
+      await db.collection("transactions").add({
+        userId,
+        type: "data",
+        network,
+        phone,
+        plan,
+        amount,
+        requestId,
+        status: "success",
+        timestamp: admin.firestore.FieldValue.serverTimestamp()
+      });
 
-    {
+      // 2️⃣ Deduct wallet balance
+      const userRef = db.collection("users").doc(userId);
+      const userDoc = await userRef.get();
+
+      if (userDoc.exists) {
+        const currentWallet = userDoc.data().wallet || 0;
+        const newWallet = currentWallet - parseFloat(amount);
+
+        await userRef.update({
+          wallet: newWallet >= 0 ? newWallet : 0
+        });
+      }
+
+      // ✅ Respond success
       return res.status(200).json({
         ORDER_RECEIVED: true,
         message: "✅ Data purchase successful",
@@ -90,6 +118,7 @@ if (isSuccess) {
       });
     }
 
+    // ❌ If purchase failed
     return res.status(500).json({
       ORDER_RECEIVED: false,
       message: parsedResponse.status || "❌ Unknown error",
