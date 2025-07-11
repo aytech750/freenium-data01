@@ -14,7 +14,9 @@ const db = admin.firestore();
 module.exports = async function handler(req, res) {
   const secret = process.env.PAYSTACK_SECRET_KEY;
   const hash = req.headers["x-paystack-signature"];
-  const rawBody = JSON.stringify(req.body);
+ const getRawBody = require("raw-body");
+const rawBody = (await getRawBody(req)).toString();
+
 
   const expectedHash = crypto
     .createHmac("sha512", secret)
