@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FREENIUM Rewards</title>
   <link rel="stylesheet" href="reward.css" />
-   <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
 </head>
 <body>
   <section class="rewards-section">
@@ -14,8 +14,8 @@
 
       <div class="reward-balance">
         <p>Total Rewards Earned</p>
-        <h1>₦</h1>
-        <button>Withdraw Rewards</button>
+        <h1 id="rewardAmount">₦0</h1>
+        <button id="withdrawBtn" disabled>Withdraw Rewards</button>
       </div>
 
       <div class="how-to-earn">
@@ -28,66 +28,74 @@
       <a href="dashboard.html">&lt; Back to Dashboard</a>
     </div>
   </section>
+
   <script type="module">
- import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
-  authDomain: "freenium-data001.firebaseapp.com",
-  projectId: "freenium-data001",
-  storageBucket: "freenium-data001.appspot.com",
-  messagingSenderId: "867380700269",
-  appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+      authDomain: "freenium-data001.firebaseapp.com",
+      projectId: "freenium-data001",
+      storageBucket: "freenium-data001.appspot.com",
+      messagingSenderId: "867380700269",
+      appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+    };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-// DOM Elements
-const rewardBalanceText = document.querySelector(".reward-balance h1");
-const withdrawBtn = document.querySelector(".reward-balance button");
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    const uid = user.uid;
-    const userRef = doc(db, "users", uid);
-    const userSnap = await getDoc(userRef);
+    // Elements
+    const rewardAmount = document.getElementById("rewardAmount");
+    const withdrawBtn = document.getElementById("withdrawBtn");
 
-    if (userSnap.exists()) {
-      const data = userSnap.data();
-      const currentRewards = data.rewards || 0;
-      rewardBalanceText.innerText = `₦${currentRewards}`;
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return window.location.href = "index.html";
+
+      const uid = user.uid;
+      const userRef = doc(db, "users", uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        alert("User record not found.");
+        return;
+      }
+
+      const userData = userSnap.data();
+      let rewards = userData.rewards || 0;
+      rewardAmount.innerText = `₦${rewards}`;
+      withdrawBtn.disabled = rewards <= 0;
 
       withdrawBtn.addEventListener("click", async () => {
-        if (currentRewards > 0) {
-          const confirmWithdraw = confirm(`Withdraw ₦${currentRewards} to wallet?`);
-          if (confirmWithdraw) {
-            await updateDoc(userRef, {
-              wallet: increment(currentRewards),
-              rewards: 0,
-            });
-            rewardBalanceText.innerText = "₦0";
-            alert("Reward withdrawn to your wallet!");
-          }
-        } else {
-          alert("No rewards to withdraw yet.");
+        if (rewards <= 0) {
+          alert("No rewards to withdraw.");
+          return;
+        }
+
+        const confirmWithdraw = confirm(`Withdraw ₦${rewards} to your wallet?`);
+        if (!confirmWithdraw) return;
+
+        withdrawBtn.disabled = true;
+        withdrawBtn.innerText = "Processing...";
+
+        try {
+          await updateDoc(userRef, {
+            wallet: increment(rewards),
+            rewards: 0,
+          });
+
+          rewardAmount.innerText = "₦0";
+          alert("Successfully withdrawn to your wallet!");
+        } catch (err) {
+          console.error("Withdraw error:", err);
+          alert("An error occurred. Please try again.");
+          withdrawBtn.disabled = false;
+          withdrawBtn.innerText = "Withdraw Rewards";
         }
       });
-
-    } else {
-      console.error("User document not found.");
-    }
-  } else {
-    window.location.href = "index.html";
-  }
-});
-withdrawBtn.disabled = true;
-withdrawBtn.innerText = "Processing...";
-
+    });
   </script>
 </body>
 </html>
