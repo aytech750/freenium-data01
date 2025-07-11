@@ -216,9 +216,7 @@
 
     document.getElementById("user-email").textContent = email;
     const userEmailText = document.getElementById("user-email-text");
-    if (userEmailText) {
-      userEmailText.textContent = `Logged in as: ${email}`;
-    }
+  
 
     try {
       const userDoc = await db.collection("users").doc(uid).get();
