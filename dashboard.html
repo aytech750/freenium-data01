@@ -147,13 +147,17 @@
     <a href="referrals.html"><i class="fas fa-users"></i><span>Referrals</span></a>
     <a href="profile.html"><i class="fas fa-user-cog"></i><span>Profile</span></a>
   </footer>
- <!-- Firebase SDK v9 (Compatible version) -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- Paystack Script -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
+
+<!-- Main App Logic -->
 <script>
-  // Your Firebase Config
+  // Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
     authDomain: "freenium-data001.firebaseapp.com",
@@ -167,98 +171,16 @@
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
- 
 
-
+  // Menu Toggle
   const menuIcon = document.getElementById("menuIcon");
   const closeIcon = document.getElementById("closeIcon");
   const sideMenu = document.getElementById("sideMenu");
 
-  // Open Menu
-  menuIcon.addEventListener("click", () => {
-    sideMenu.classList.add("active");
-  });
+  menuIcon.addEventListener("click", () => sideMenu.classList.add("active"));
+  closeIcon.addEventListener("click", () => sideMenu.classList.remove("active"));
 
-  // Close Menu
-  closeIcon.addEventListener("click", () => {
-    sideMenu.classList.remove("active");
-  });
- 
- auth.onAuthStateChanged((user) => {
-  if (!user) {
-    window.location.href = "index.html";
-  } else if (!user.emailVerified) {
-    alert("Please verify your email before accessing the dashboard.");
-    auth.signOut();
-    window.location.href = "index.html";
-  } else {
-    // ✅ Now safe to use user.email and user.uid
-    const email = user.email;
-    const uid = user.uid;
-
-    const emailElement = document.getElementById("user-email");
-    if (emailElement) emailElement.textContent = email;
-
-    // Load user profile
- db.collection("users").doc(uid).get()
-  .then(doc => {
-    if (doc.exists) {
-      const data = doc.data();
-
-      // Name
-      const name = data.name || "Welcome";
-      document.getElementById("userName").textContent = name;
-
-      // Wallet
-      const wallet = data.wallet || 0;
-      document.getElementById("walletBalance").textContent = parseFloat(wallet).toFixed(2);
-
-      // ✅ Load transaction history
-      db.collection("transactions")
-        .where("uid", "==", uid)
-        .orderBy("timestamp", "desc")
-        .limit(20)
-        .get()
-        .then(querySnapshot => {
-          const tbody = document.getElementById("transaction-body");
-          tbody.innerHTML = "";
-          if (querySnapshot.empty) {
-            tbody.innerHTML = "<tr><td colspan='4'>No transactions found</td></tr>";
-          } else {
-            querySnapshot.forEach(doc => {
-              const data = doc.data();
-              const date = data.timestamp?.toDate().toLocaleString() || "N/A";
-              const type = data.type || "N/A";
-              const amount = data.amount || 0;
-              const status = data.status || "Pending";
-              const row = `
-                <tr>
-                  <td>${date}</td>
-                  <td>${type}</td>
-                  <td>₦${parseFloat(amount).toFixed(2)}</td>
-                  <td>${status}</td>
-                </tr>
-              `;
-              tbody.innerHTML += row;
-            });
-          }
-        });
-
-    } else {
-      console.warn("User document not found.");
-      showToast("Profile not found");
-    }
-  })
-  .catch(err => {
-    console.error("Error getting user data:", err);
-    showToast("Failed to load user profile.");
-  });
-
- </script>
- <!-- Paystack Script -->
-<script src="https://js.paystack.co/v1/inline.js"></script>
-<script>
-  // Fund Wallet Modal Logic
+  // Fund Wallet Elements
   const fundBtn = document.getElementById("fundWalletBtn");
   const modal = document.getElementById("fund-wallet-modal");
   const closeModal = document.getElementById("close-modal");
@@ -275,95 +197,175 @@
     fundAmountInput.value = "";
   });
 
- submitFund.addEventListener("click", async () => {
-  const amount = parseFloat(fundAmountInput.value);
-  if (!amount || amount < 100) {
-    alert("Enter a valid amount (minimum ₦100)");
-    return;
-  }
+  // Auth State
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      window.location.href = "index.html";
+      return;
+    }
 
-  const user = firebase.auth().currentUser;
-  if (!user) return alert("You must be logged in");
+    if (!user.emailVerified) {
+      alert("Please verify your email before accessing the dashboard.");
+      await auth.signOut();
+      window.location.href = "index.html";
+      return;
+    }
 
-  const email = user.email;
-  const amountKobo = amount * 100;
+    const email = user.email;
+    const uid = user.uid;
 
-  // 👇 STEP 1: Create reference + save pending payment
-  const reference = `ref_${user.uid}_${Date.now()}`;
-  await firebase.firestore().collection("payments").add({
-    uid: user.uid,
-    amount: amount,
-    status: "pending",
-    reference,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  });
+    document.getElementById("user-email").textContent = email;
+    const userEmailText = document.getElementById("user-email-text");
+    if (userEmailText) {
+      userEmailText.textContent = `Logged in as: ${email}`;
+    }
 
-  // 👇 STEP 2: Trigger Paystack
-  let handler = PaystackPop.setup({
-    key: "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75",
-    email: email,
-    amount: amountKobo,
-    currency: "NGN",
-    reference: reference, // ✅ use the same reference
-    metadata: {
-      custom_fields: [
-        {
-          display_name: "User ID",
-          variable_name: "uid",
-          value: user.uid
-        }
-      ]
-    },
-    callback: function (response) {
-      verifyPayment(reference, amount); // ✅ match with what we saved
-    },
-    onClose: function () {
-      alert("Transaction was cancelled");
+    try {
+      const userDoc = await db.collection("users").doc(uid).get();
+      if (!userDoc.exists) {
+        showToast("Profile not found");
+        return;
+      }
+
+      const userData = userDoc.data();
+      const name = userData.name || "Welcome";
+      const wallet = userData.wallet || 0;
+
+      document.getElementById("userName").textContent = name;
+      document.getElementById("walletBalance").textContent = parseFloat(wallet).toFixed(2);
+
+      // Load Transactions
+      const txnSnapshot = await db.collection("transactions")
+        .where("uid", "==", uid)
+        .orderBy("timestamp", "desc")
+        .limit(20)
+        .get();
+
+      const tbody = document.getElementById("transaction-body");
+      tbody.innerHTML = "";
+
+      if (txnSnapshot.empty) {
+        tbody.innerHTML = "<tr><td colspan='4'>No transactions found</td></tr>";
+      } else {
+        txnSnapshot.forEach(doc => {
+          const tx = doc.data();
+          const date = tx.timestamp?.toDate().toLocaleString() || "N/A";
+          const type = tx.type || "N/A";
+          const amount = tx.amount || 0;
+          const status = tx.status || "Pending";
+
+          const row = `
+            <tr>
+              <td>${date}</td>
+              <td>${type}</td>
+              <td>₦${parseFloat(amount).toFixed(2)}</td>
+              <td>${status}</td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      }
+    } catch (err) {
+      console.error("Error loading user:", err);
+      showToast("Failed to load user data.");
     }
   });
 
-  handler.openIframe();
-});
+  // Fund Wallet Submit
+  submitFund.addEventListener("click", async () => {
+    const amount = parseFloat(fundAmountInput.value);
+    if (!amount || amount < 100) {
+      alert("Enter a valid amount (minimum ₦100)");
+      return;
+    }
 
+    const user = firebase.auth().currentUser;
+    if (!user) return alert("You must be logged in");
 
-  async function verifyPayment(reference, amount) {
-  loadingText.style.display = "block";
+    const email = user.email;
+    const amountKobo = amount * 100;
+    const reference = `ref_${user.uid}_${Date.now()}`;
 
-  try {
-    const res = await fetch("https://freenium-data01.vercel.app/api/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reference, amount })
+    // Save pending payment
+    await db.collection("payments").add({
+      uid: user.uid,
+      amount: amount,
+      status: "pending",
+      reference,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    const result = await res.json();
-    loadingText.style.display = "none";
-    showToast(result.message || "Wallet funded");
+    // Launch Paystack
+    const handler = PaystackPop.setup({
+      key: "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75",
+      email: email,
+      amount: amountKobo,
+      currency: "NGN",
+      reference,
+      metadata: {
+        custom_fields: [
+          {
+            display_name: "User ID",
+            variable_name: "uid",
+            value: user.uid
+          }
+        ]
+      },
+      callback: function () {
+        verifyPayment(reference, amount);
+      },
+      onClose: function () {
+        alert("Transaction was cancelled");
+      }
+    });
 
-    if (result.success) {
-      showReceipt(reference, amount);
-      modal.style.display = "none";
-      fundAmountInput.value = "";
+    handler.openIframe();
+  });
+
+  // Verify Payment
+  async function verifyPayment(reference, amount) {
+    loadingText.style.display = "block";
+
+    try {
+      const res = await fetch("https://freenium-data01.vercel.app/api/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reference, amount })
+      });
+
+      const result = await res.json();
+      loadingText.style.display = "none";
+
+      showToast(result.message || "Wallet funded");
+
+      if (result.success) {
+        showReceipt(reference, amount);
+        modal.style.display = "none";
+        fundAmountInput.value = "";
+        setTimeout(() => window.location.reload(), 3000);
+      }
+    } catch (err) {
+      console.error("Verification failed:", err);
+      loadingText.style.display = "none";
+      showToast("Verification failed. Try again.");
     }
-  } catch (err) {
-    console.error("Verification failed:", err);
-    loadingText.style.display = "none";
-    showToast("Verification failed. Try again.");
   }
-}
 
-function showReceipt(reference, amount) {
-  document.getElementById("receipt-ref").textContent = reference;
-  document.getElementById("receipt-amount").textContent = parseFloat(amount).toFixed(2);
-  document.getElementById("receipt-time").textContent = new Date().toLocaleString();
-  document.getElementById("receipt-modal").style.display = "block";
-}
-document.getElementById("close-receipt").addEventListener("click", () => {
-  document.getElementById("receipt-modal").style.display = "none";
-  location.reload(); // 👈 optionally reload after viewing receipt
-});
+  // Show Receipt
+  function showReceipt(reference, amount) {
+    document.getElementById("receipt-ref").textContent = reference;
+    document.getElementById("receipt-amount").textContent = parseFloat(amount).toFixed(2);
+    document.getElementById("receipt-time").textContent = new Date().toLocaleString();
+    document.getElementById("receipt-modal").style.display = "block";
+  }
 
+  // Close Receipt
+  document.getElementById("close-receipt").addEventListener("click", () => {
+    document.getElementById("receipt-modal").style.display = "none";
+    location.reload();
+  });
 
+  // Toast Notification
   function showToast(message) {
     const toast = document.getElementById("toast");
     toast.textContent = message;
@@ -372,19 +374,18 @@ document.getElementById("close-receipt").addEventListener("click", () => {
       toast.style.visibility = "hidden";
     }, 3000);
   }
-  
-// ✅ Move logout function out here
-function logout() {
-  firebase.auth().signOut()
-    .then(() => {
-      window.location.href = "index.html";
-    })
-    .catch((error) => {
-      console.error("Logout failed:", error);
-      alert("Logout failed: " + error.message);
-    });
-}
 
+  // Logout
+  function logout() {
+    auth.signOut()
+      .then(() => {
+        window.location.href = "index.html";
+      })
+      .catch((error) => {
+        console.error("Logout failed:", error);
+        alert("Logout failed: " + error.message);
+      });
+  }
 </script>
-  </body>
-  </html>
+</body>
+</html>
