@@ -174,12 +174,19 @@ await cred.user.sendEmailVerification();
 
 if (referrerCode) {
   const refDoc = await db.collection("users").doc(referrerCode).get();
-  if (refDoc.exists) {
+ if (refDoc.exists) {
+  try {
     await db.collection("users").doc(referrerCode).update({
       rewards: firebase.firestore.FieldValue.increment(100),
       referrals: firebase.firestore.FieldValue.arrayUnion(uid)
     });
+    console.log("Referrer updated successfully");
+  } catch (error) {
+    console.error("Failed to update referrer:", error.message);
   }
+} else {
+  console.warn("Referrer not found:", referrerCode);
+}
 }
 
 showToast("Signup successful 🎉 Check your email to verify your account!");
