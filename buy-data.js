@@ -20,6 +20,7 @@ export default async function handler(req, res) {
   }
 
   const { network, phone, plan, amount, requestId, userId } = req.body;
+console.log("📥 Received Payload:", req.body);
 
   // ✅ Input Validation
   if (
