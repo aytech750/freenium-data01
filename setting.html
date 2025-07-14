@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Settings - FREENIUM DATA</title>
+  <link rel="stylesheet" href="setting.css" />
+  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+</head>
+<body>
+  <section class="settings-section">
+    <div class="settings-container">
+      <h2>⚙️ Account Settings</h2>
+
+      <form>
+        <label for="currentPassword">Current Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="currentPassword" placeholder="Enter current password" required />
+          <span class="toggle-password">👁️</span>
+        </div>
+
+        <label for="newPassword">New Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="newPassword" placeholder="Enter new password" required />
+          <span class="toggle-password">👁️</span>
+        </div>
+
+        <label for="confirmNewPassword">Confirm New Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="confirmNewPassword" placeholder="Re-enter new password" required />
+          <span class="toggle-password">👁️</span>
+        </div>
+
+        <button type="submit">Update Password</button>
+        <div id="toast" class="toast"></div>
+        <a href="dashboard.html">&lt; Back to Dashboard</a>
+      </form>
+    </div>
+  </section>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import {
+      getAuth,
+      reauthenticateWithCredential,
+      EmailAuthProvider,
+      updatePassword
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+      authDomain: "freenium-data001.firebaseapp.com",
+      projectId: "freenium-data001",
+      storageBucket: "freenium-data001.appspot.com",
+      messagingSenderId: "867380700269",
+      appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.addEventListener("DOMContentLoaded", () => {
+      // ✅ Toggle password show/hide
+      document.querySelectorAll(".toggle-password").forEach(icon => {
+        icon.addEventListener("click", () => {
+          const input = icon.previousElementSibling;
+          const isPassword = input.type === "password";
+          input.type = isPassword ? "text" : "password";
+          icon.textContent = isPassword ? "🙈" : "👁️";
+        });
+      });
+
+      // ✅ Show toast message
+      function showToast(message, isSuccess = true) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.style.backgroundColor = isSuccess ? "#28a745" : "#dc3545";
+        toast.classList.add("show");
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 3000);
+      }
+
+      // ✅ Handle password update
+      const form = document.querySelector("form");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const currentPassword = document.getElementById("currentPassword").value;
+        const newPassword = document.getElementById("newPassword").value;
+        const confirmNewPassword = document.getElementById("confirmNewPassword").value;
+
+        if (newPassword !== confirmNewPassword) {
+          return showToast("❌ New passwords do not match", false);
+        }
+
+        const user = auth.currentUser;
+        if (!user) {
+          return showToast("❌ You are not logged in", false);
+        }
+
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+
+        try {
+          await reauthenticateWithCredential(user, credential);
+          await updatePassword(user, newPassword);
+          showToast("✅ Password updated successfully");
+          form.reset();
+        } catch (error) {
+          console.error("❌ Error updating password:", error);
+          showToast("❌ " + error.message, false);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
