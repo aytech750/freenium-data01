@@ -2,9 +2,8 @@ import admin from "firebase-admin";
 
 // ✅ Firebase Admin Initialization
 if (!admin.apps.length) {
- const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_KEY);
-serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
-
+  const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_KEY);
+  serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -19,12 +18,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const { network, phone, plan, amount, requestId, userId } = req.body;
-console.log("📥 Received Payload:", req.body);
+  const { network, phone, plan, amount, requestId, uid } = req.body;
+  console.log("📥 Received Payload:", req.body);
 
   // ✅ Input Validation
   if (
-    !network || !phone || !plan || !amount || !requestId || !userId ||
+    !network || !phone || !plan || !amount || !requestId || !uid ||
     typeof phone !== "string" || phone.trim() === ""
   ) {
     return res.status(400).json({ error: "Missing or invalid required fields" });
@@ -89,7 +88,7 @@ console.log("📥 Received Payload:", req.body);
     if (isSuccess) {
       // 1️⃣ Save transaction to Firestore
       await db.collection("transactions").add({
-        userId,
+        uid,
         type: "data",
         network,
         phone,
@@ -101,7 +100,7 @@ console.log("📥 Received Payload:", req.body);
       });
 
       // 2️⃣ Deduct wallet balance
-      const userRef = db.collection("users").doc(userId);
+      const userRef = db.collection("users").doc(uid);
       const userDoc = await userRef.get();
 
       if (userDoc.exists) {
