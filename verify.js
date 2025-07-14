@@ -1,17 +1,20 @@
 import fetch from "node-fetch";
 import admin from "firebase-admin";
 import { getFirestore } from "firebase-admin/firestore";
-import { cert } from "firebase-admin/app";
 
-// Initialize Firebase Admin SDK
+// ✅ Initialize Firebase Admin SDK
 if (!admin.apps.length) {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_KEY);
+  serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+
   admin.initializeApp({
-    credential: cert(JSON.parse(process.env.FIREBASE_ADMIN_KEY)),
+    credential: admin.credential.cert(serviceAccount),
   });
 }
+
 const db = getFirestore();
 
-// Helper to reverse Paystack fee (in Naira)
+// 🔁 Helper to reverse Paystack fee (in Naira)
 function calculateNetAmount(paystackAmount) {
   const amount = paystackAmount / 100; // Convert from Kobo to Naira
   const flatFee = amount >= 2500 ? 100 : 0;
@@ -19,6 +22,7 @@ function calculateNetAmount(paystackAmount) {
   return Math.round(amount - fee); // Round to nearest Naira
 }
 
+// 🚀 Main handler
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ success: false, message: "Method not allowed" });
@@ -30,7 +34,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1️⃣ Verify payment from Paystack
+    // 1️⃣ Verify payment with Paystack
     const verifyRes = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
       headers: {
         Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
@@ -55,7 +59,6 @@ export default async function handler(req, res) {
     }
 
     const walletAmount = Number(walletAmountRaw);
-
     if (isNaN(walletAmount)) {
       return res.status(400).json({ success: false, message: "Invalid wallet amount" });
     }
@@ -71,12 +74,12 @@ export default async function handler(req, res) {
       wallet: admin.firestore.FieldValue.increment(walletAmount),
     });
 
-    // 4️⃣ Log to transactions collection
+    // 4️⃣ Log transaction
     await db.collection("transactions").add({
       uid,
       type: "wallet-fund",
       amount: netAmount,
-      paystackAmount: paystackAmount / 100, // Show full amount paid
+      paystackAmount: paystackAmount / 100,
       status: "success",
       reference,
       method: verifyData.data.channel || "unknown",
@@ -84,13 +87,8 @@ export default async function handler(req, res) {
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // 5️⃣ Optionally update "payments" collection from pending to success
-    const paySnap = await db
-      .collection("payments")
-      .where("reference", "==", reference)
-      .limit(1)
-      .get();
-
+    // 5️⃣ Optionally update "payments" collection if it exists
+    const paySnap = await db.collection("payments").where("reference", "==", reference).limit(1).get();
     if (!paySnap.empty) {
       await paySnap.docs[0].ref.update({ status: "success" });
     }
