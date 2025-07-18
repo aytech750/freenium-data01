@@ -158,7 +158,7 @@
       document.getElementById("globalSpinner").classList.remove("hidden");
 
       // 🚀 SEND TO BACKEND (make sure your backend reads these keys exactly!)
-      const response = await fetch("https://freenium-data01.vercel.app/api/airtime.js", {
+      const response = await fetch("https://freenium-data01.vercel.app/api/airtime", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
