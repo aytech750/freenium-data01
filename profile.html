@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profile Management - FREENIUM DATA</title>
+  <link rel="stylesheet" href="profile.css" />
+   <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+</head>
+<body>
+  <section class="profile-section">
+    <div class="profile-container">
+      <h2>👤 My Profile</h2>
+
+      <form>
+        <label for="fullName">Full Name</label>
+        <input type="text" id="fullName" value="" disabled />
+
+        <label for="email">Email Address</label>
+        <input type="email" id="email" value="" disabled />
+
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" value="" disabled />
+
+        <label for="wallet">Wallet Balance</label>
+        <input type="text" id="wallet" value="₦" disabled />
+
+        <button type="submit">Update Profile</button>
+        <a href="dashboard.html">&lt; Back to Dashboard</a>
+      </form>
+     
+
+    </div>
+  </section>
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+    authDomain: "freenium-data001.firebaseapp.com",
+    projectId: "freenium-data001",
+    storageBucket: "freenium-data001.firebaseapp.com",
+    messagingSenderId: "867380700269",
+    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const fullNameInput = document.getElementById("fullName");
+  const emailInput = document.getElementById("email");
+  const phoneInput = document.getElementById("phone");
+  const walletInput = document.getElementById("wallet");
+  const updateBtn = document.querySelector("form button[type='submit']");
+
+  // Enable editing
+  fullNameInput.disabled = false;
+  phoneInput.disabled = false;
+
+  // Load user data
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      emailInput.value = user.email;
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        fullNameInput.value = data.fullName || "";
+        phoneInput.value = data.phone || "";
+        walletInput.value = "₦" + (data.wallet || "0");
+      }
+    } else {
+      window.location.href = "login.html";
+    }
+  });
+
+  // Update user profile
+  updateBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const user = auth.currentUser;
+    if (user) {
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, {
+        fullName: fullNameInput.value,
+        phone: phoneInput.value
+      });
+      alert("Profile updated successfully!");
+    }
+  });
+
+  // Logout
+  window.logout = () => {
+    signOut(auth).then(() => {
+      window.location.href = "login.html";
+    });
+  };
+ 
+
+</script>
+</body>
+</html>

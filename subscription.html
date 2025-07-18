@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TV Subscription - Freenium Data</title>
+  <link rel="stylesheet" href="subscription.css" />
+  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<section class="tv-sub-section">
+  <H1>COMING SOON........</H1>
+  <h2>Subscribe to TV</h2>
+  <h3>Select Provider</h3>
+
+  <div class="tv-provider-container">
+    <div class="tv-provider" onclick="selectTV(this)">
+      <img src="https://i.imgur.com/chJYYZx.png" alt="DSTV" data-tv="dstv" />
+      <p>DSTV</p>
+    </div>
+    <div class="tv-provider" onclick="selectTV(this)">
+      <img src="https://i.imgur.com/QHiyhdw.png" alt="GOTV" data-tv="gotv" />
+      <p>GOTV</p>
+    </div>
+    <div class="tv-provider" onclick="selectTV(this)">
+      <img src="https://i.imgur.com/IjxGg7T.jpeg" alt="Startimes" data-tv="startimes" />
+      <p>Startimes</p>
+    </div>
+  </div>
+
+  <input type="hidden" id="selectedTV" />
+
+  <form id="tvForm">
+    <input type="text" id="smartCard" placeholder="Enter Smart Card Number" required />
+
+    <label for="tvPackage">Select Package</label>
+    <select id="tvPackage" required>
+      <option disabled selected>Select TV Provider First</option>
+    </select>
+
+    <button type="submit">Subscribe</button>
+    <a href="dashboard.html" class="back-arrow">&lt; PREVIOUS</a>
+  </form>
+
+  <div class="loading hidden" id="loading">
+    <div class="spinner"></div>
+    Processing...
+  </div>
+
+  <div id="toast" class="toast">Subscription Successful</div>
+</section>
+
+<script>
+  const tvPackages = {
+  dstv: [
+    { label: "DSTV Padi - ₦2500", value: "dstv_padi" },
+    { label: "DSTV Yanga - ₦3500", value: "dstv_yanga" },
+    { label: "DSTV Confam - ₦6200", value: "dstv_confam" }
+  ],
+  gotv: [
+    { label: "GOtv Smallie - ₦1200", value: "gotv_smallie" },
+    { label: "GOtv Jinja - ₦2250", value: "gotv_jinja" },
+    { label: "GOtv Max - ₦4850", value: "gotv_max" }
+  ],
+  startimes: [
+    { label: "Nova - ₦1200", value: "nova" },
+    { label: "Basic - ₦3000", value: "basic" },
+    { label: "Classic - ₦4500", value: "classic" }
+  ]
+};
+
+function selectTV(divElement) {
+  const allTVs = document.querySelectorAll(".tv-provider");
+  allTVs.forEach(tv => tv.classList.remove("selected"));
+
+  divElement.classList.add("selected");
+
+  const img = divElement.querySelector("img");
+  const selectedTV = img.getAttribute("data-tv");
+  document.getElementById("selectedTV").value = selectedTV;
+
+  loadPackages(selectedTV);
+}
+
+function loadPackages(tv) {
+  const select = document.getElementById("tvPackage");
+  select.innerHTML = "";
+
+  if (tvPackages[tv]) {
+    tvPackages[tv].forEach(pkg => {
+      const option = document.createElement("option");
+      option.value = pkg.value;
+      option.textContent = pkg.label;
+      select.appendChild(option);
+    });
+  } else {
+    const option = document.createElement("option");
+    option.textContent = "Select TV Provider First";
+    option.disabled = true;
+    option.selected = true;
+    select.appendChild(option);
+  }
+}
+
+document.getElementById("tvForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const tv = document.getElementById("selectedTV").value;
+  const card = document.getElementById("smartCard").value;
+  const pkg = document.getElementById("tvPackage").value;
+
+  if (!tv || !card || !pkg) {
+    showToast("Please complete all fields!");
+    return;
+  }
+
+  document.getElementById("loading").classList.remove("hidden");
+
+  setTimeout(() => {
+    document.getElementById("loading").classList.add("hidden");
+    showToast("Subscription successful! 📺");
+
+    document.getElementById("tvForm").reset();
+    document.querySelectorAll(".tv-provider").forEach(tv => tv.classList.remove("selected"));
+    document.getElementById("tvPackage").innerHTML = `<option disabled selected>Select TV Provider First</option>`;
+    document.getElementById("selectedTV").value = "";
+  }, 2000);
+});
+
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3000);
+}
+
+</script>
+ <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+    authDomain: "freenium-data001.firebaseapp.com",
+    projectId: "freenium-data001",
+    storageBucket: "freenium-data001.firebasestorage.app",
+    messagingSenderId: "867380700269",
+    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+ 
+</script>
+</body>
+</html>

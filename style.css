@@ -1,0 +1,526 @@
+ * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      padding: 15px 50px;
+      background-color: #00b96b;
+      color: white;
+    }
+
+    .logo { 
+      flex-grow: 1;
+      font-size: 1.4rem;
+    }
+ 
+   .menu-icon, .close-icon {
+  font-size: 24px;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0; left: -250px;
+  width: 250px;
+  height: 100%;
+  background: #00b96b;
+  color: white;
+  transition:  opacity 0.3s ease, transform 0.3s ease;
+  z-index: 1000;
+  opacity: 0;
+  transform: scale(0.95);
+  border-radius: 10px;
+}
+
+.sidebar ul {
+  list-style: hollow circle;
+  padding: 20px;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  color: green;
+}
+
+.sidebar.active {
+  left: 0;
+  color: green;
+   opacity: 1;
+  transform: scale(1);
+}
+.sidebar a {
+  text-decoration: none;
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.sidebar a:hover {
+  color: #00ffcc;
+}
+
+.dashboard-content {
+  margin-left: 260px;
+  transition: margin-left 0.3s ease;
+}
+
+.dashboard-content.expanded {
+  margin-left: 10px;
+}
+
+    main {
+      padding: 20px;
+      padding-bottom: 80px; /* space for bottom nav */
+    }
+
+    .wallet {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .wallet h2 {
+      margin-bottom: 10px;
+    }
+
+    .wallet p {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: #00b96b;
+      margin-bottom: 15px;
+    }
+
+    .wallet button {
+      background: #00b96b;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .services {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 15px;
+    }
+
+    .service-card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .service-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .ads-section {
+      background-color: #fff3cd;
+      color: #856404;
+      margin: 20px auto;
+      padding: 10px;
+      border: 1px solid #ffeeba;
+      border-radius: 4px;
+      width: 90%;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background-color: white;
+      border-top: 1px solid #ccc;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      z-index: 100;
+    }
+
+    .bottom-nav a {
+      text-decoration: none;
+      color: #333;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .bottom-nav a i {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    #transaction-history {
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.05);
+      margin-top: 30px;
+    }
+
+    #transaction-history h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .transaction-table table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .transaction-table th,
+    .transaction-table td {
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .transaction-table th {
+      background-color: #f4f4f4;
+      color: #555;
+    }
+
+    .transaction-table tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    .status-success {
+      color: green;
+      font-weight: bold;
+    }
+
+    .status-failed {
+      color: red;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      color: orange;
+      font-weight: bold;
+    }
+
+    .profile-settings {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      width: 300px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      padding: 20px;
+      display: none;
+      z-index: 999;
+    }
+
+    .profile-settings h2 {
+      margin-bottom: 15px;
+    }
+
+    .profile-settings input {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .profile-settings button {
+      width: 100%;
+      padding: 10px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .user-profile-summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+   .user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+}
+.circle-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+    .button.logout {
+        color: yellow;
+    }
+      
+.logout-btn:hover {
+  background-color: #009e5f;
+  transform: translateY(-2px);
+  color: blue;
+}
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  text-align: center;
+}
+.transaction-history {
+  overflow-x: auto;
+}
+
+.transaction-history table {
+  min-width: 100%;
+  border-collapse: collapse;
+}
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #4ade80;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  display: none;
+  z-index: 1000;
+}
+
+.toast.show {
+  display: block;
+  animation: fadeInOut 4s ease forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(20px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(20px); }
+}
+
+.settings-icon {
+  color: white;
+  font-size: 22px;
+  margin-left: auto;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background 0.3s, transform 0.2s;
+  text-decoration: none;
+}
+
+.settings-icon:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: rotate(20deg) scale(1.1);
+}
+.sidebar-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 999;
+  display: none;
+}
+.sidebar.active + .sidebar-overlay {
+  display: block;
+}
+.spinner {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #4CAF50;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+/* Spinner CSS */
+.global-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255,255,255,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  display: none;
+}
+.global-loader .spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4CAF50;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.success {
+  color: #00b96b;
+}
+.failed {
+  color: red;
+}
+.pending {
+  color: orange;
+}
+/* 🔒 Modal Background Overlay */
+#fund-wallet-modal {
+  display: none; /* Initially hidden, toggle with JS */
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(17, 24, 39, 0.8); /* Dark translucent background */
+  transition: opacity 0.3s ease;
+}
+
+/* 📦 Modal Box */
+#fund-wallet-modal .modal-content {
+  background-color: #1f2937;
+  color: #fff;
+  padding: 30px 10px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+  margin-top: 100px;
+}
+
+/* 📝 Input Field */
+.modal-content input[type="number"] {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 1rem;
+  margin-bottom: 15px;
+  outline: none;
+}
+
+/* ✅ Submit Button */
+.modal-content button {
+  background-color: #10b981;
+  border: none;
+  color: white;
+  padding: 12px 20px;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.modal-content button:hover {
+  background-color: #059669;
+}
+
+/* ❌ Close Button */
+#close-modal {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 20px;
+  color: #f87171;
+  font-weight: bold;
+}
+
+#close-modal:hover {
+  color: #ef4444;
+}
+
+/* 🔄 Loading text */
+#fund-loading {
+  margin-top: 10px;
+  color: #d1d5db;
+  font-style: italic;
+}
+
+/* 🎞️ Slide-in Animation */
+@keyframes slideIn {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+   .amount-wrapper {
+  position: relative;
+  max-width: 100%;
+  margin: 10px auto;
+}
+
+.naira-icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;  /* More spacing */
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: #cbd5e1;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.amount-wrapper input {
+  width: 100%;
+  padding: 12px 16px 12px 44px;  /* match left space to icon width */
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  background: #0f172a;  /* dark */
+  color: white;
+  outline: none;
+  box-sizing: border-box;
+}
+
+  
