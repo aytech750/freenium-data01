@@ -185,7 +185,6 @@
       const userData = userDoc.data();
       document.getElementById("userName").textContent = userData.name || "Welcome";
       document.getElementById("walletBalance").textContent = parseFloat(userData.wallet || 0).toFixed(2);
-      document.getElementById("wallet-balance").textContent = `₦${parseFloat(userData.wallet || 0).toFixed(2)}`;
 
       loadTransactions(user.uid);
     } catch (err) {
