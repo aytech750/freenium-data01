@@ -40,9 +40,6 @@
   <!-- Main Dashboard Content -->
   <main>
     <!-- User Welcome -->
-     
-     <span id="user-email"></span>
-     <span id="wallet-balance"></span> 
     <section class="user-profile-summary">
       <p id="user-email-text"></p>
       <i class="fas fa-cog" onclick="toggleProfileMenu()" style="font-size: 18px; cursor: pointer;"></i>
@@ -172,7 +169,7 @@
     }
 
     currentUser = user;
-    document.getElementById("user-email").textContent = user.email;
+
     document.getElementById("user-email-text").textContent = user.email;
 
     try {
