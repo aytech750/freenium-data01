@@ -56,7 +56,8 @@
      <div class="wallet-box">
   <h3>Wallet Balance:</h3>
   <p>₦<span id="walletBalance">0.00</span></p>
-  <button><a href="fundwallet.html">FundWallet</button>
+ <button onclick="window.location.href='fundwallet.html'">Fund Wallet</button>
+
 </div>
 
 </div>
@@ -145,133 +146,140 @@
 
 <!-- Main App Logic -->
 <script>
- // Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
-  authDomain: "freenium-data001.firebaseapp.com",
-  projectId: "freenium-data001",
-  storageBucket: "freenium-data001.appspot.com",
-  messagingSenderId: "867380700269",
-  appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
-};
+  // === Firebase Configuration ===
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+    authDomain: "freenium-data001.firebaseapp.com",
+    projectId: "freenium-data001",
+    storageBucket: "freenium-data001.appspot.com",
+    messagingSenderId: "867380700269",
+    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  };
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-const paystackPublicKey = "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75";
+  let currentUser = null;
 
-// Auth
-let currentUser = null;
-
-auth.onAuthStateChanged(async (user) => {
-  if (!user) {
-    window.location.href = "index.html";
-    return;
-  }
-
-  if (!user.emailVerified) {
-    alert("Please verify your email before accessing the dashboard.");
-    await auth.signOut();
-    window.location.href = "index.html";
-    return;
-  }
-
-  currentUser = user;
-
-  document.getElementById("user-email").textContent = user.email;
-
-  try {
-    const userDoc = await db.collection("users").doc(user.uid).get();
-    if (!userDoc.exists) {
-      showToast("Profile not found");
-      return;
+  // === Auth Listener ===
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) return (window.location.href = "index.html");
+    if (!user.emailVerified) {
+      alert("Please verify your email.");
+      await auth.signOut();
+      return (window.location.href = "index.html");
     }
 
-    const userData = userDoc.data();
-    document.getElementById("userName").textContent = userData.name || "Welcome";
-    document.getElementById("walletBalance").textContent = parseFloat(userData.wallet || 0).toFixed(2);
+    currentUser = user;
+    document.getElementById("user-email").textContent = user.email;
+    document.getElementById("user-email-text").textContent = user.email;
 
-    loadTransactions(user.uid);
-  } catch (err) {
-    console.error("Error loading user:", err);
-    showToast("Failed to load user data.");
-  }
-});
+    try {
+      const userDoc = await db.collection("users").doc(user.uid).get();
+      if (!userDoc.exists) {
+        showToast("User profile not found.");
+        return;
+      }
 
-// Load Transactions
-async function loadTransactions(uid) {
-  try {
-   const snapshot = await db.collection("transactions")
-  .where("uid", "==", uid)
-  .orderBy("timestamp", "desc")
-  .limit(4) // Only show latest 4 on dashboard
-  .get();
+      const userData = userDoc.data();
+      document.getElementById("userName").textContent = userData.name || "Welcome";
+      document.getElementById("walletBalance").textContent = parseFloat(userData.wallet || 0).toFixed(2);
+      document.getElementById("wallet-balance").textContent = `₦${parseFloat(userData.wallet || 0).toFixed(2)}`;
 
-    const tbody = document.getElementById("transaction-body");
-    tbody.innerHTML = "";
+      loadTransactions(user.uid);
+    } catch (err) {
+      console.error("Error loading user:", err);
+      showToast("Failed to load user data.");
+    }
+  });
 
-    if (snapshot.empty) {
-      tbody.innerHTML = "<tr><td colspan='4'>No transactions found</td></tr>";
-    } else {
-      snapshot.forEach(doc => {
-        const tx = doc.data();
-        const date = tx.timestamp?.toDate().toLocaleString() || "N/A";
-        const type = tx.type || "N/A";
-        const amount = parseFloat(tx.amount || 0).toFixed(2);
-        const status = tx.status || "Pending";
+  // === Load Transactions ===
+  async function loadTransactions(uid) {
+    try {
+      const snapshot = await db.collection("transactions")
+        .where("uid", "==", uid)
+        .orderBy("timestamp", "desc")
+        .limit(4)
+        .get();
 
-        const row = `
-          <tr>
+      const tbody = document.getElementById("transaction-body");
+      tbody.innerHTML = "";
+
+      if (snapshot.empty) {
+        tbody.innerHTML = "<tr><td colspan='4'>No transactions yet</td></tr>";
+      } else {
+        snapshot.forEach(doc => {
+          const tx = doc.data();
+          const date = tx.timestamp?.toDate().toLocaleString() || "N/A";
+          const type = tx.type || "N/A";
+          const amount = parseFloat(tx.amount || 0).toFixed(2);
+          const status = tx.status || "Pending";
+          const ref = tx.reference || "N/A";
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
             <td>${date}</td>
             <td>${type}</td>
             <td>₦${amount}</td>
             <td>${status}</td>
-          </tr>
-        `;
-        tbody.innerHTML += row;
-      });
+          `;
+          row.style.cursor = "pointer";
+          row.addEventListener("click", () => showReceipt(ref, amount, status, date));
+          tbody.appendChild(row);
+        });
+      }
+    } catch (err) {
+      console.error("Failed to load transactions:", err);
+      showToast("Error loading transactions.");
     }
-  } catch (err) {
-    console.error("Failed to load transactions:", err);
   }
-}
 
-// Show Receipt Modal
-function showReceipt(reference, amount) {
-  document.getElementById("receipt-ref").textContent = reference;
-  document.getElementById("receipt-amount").textContent = parseFloat(amount).toFixed(2);
-  document.getElementById("receipt-time").textContent = new Date().toLocaleString();
-  document.getElementById("receipt-modal").style.display = "block";
-}
+  // === Receipt Modal ===
+  function showReceipt(reference, amount, status, time) {
+    document.getElementById("receipt-ref").textContent = reference;
+    document.getElementById("receipt-amount").textContent = amount;
+    document.getElementById("receipt-status").textContent = status;
+    document.getElementById("receipt-time").textContent = time || new Date().toLocaleString();
+    document.getElementById("receipt-modal").style.display = "block";
+  }
 
-document.getElementById("close-receipt").addEventListener("click", () => {
-  document.getElementById("receipt-modal").style.display = "none";
-  location.reload();
-});
+  document.getElementById("close-receipt").onclick = () => {
+    document.getElementById("receipt-modal").style.display = "none";
+  };
 
-// Toast
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.style.visibility = "visible";
-  setTimeout(() => {
-    toast.style.visibility = "hidden";
-  }, 3000);
-}
-document.getElementById("seeMoreBtn").addEventListener("click", () => {
-  window.location.href = "transaction.html"; // 👈 Create this page
-});
+  // === Toast Utility ===
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.style.visibility = "visible";
+    setTimeout(() => {
+      toast.style.visibility = "hidden";
+    }, 3000);
+  }
 
-// Logout
-function logout() {
-  auth.signOut()
-    .then(() => window.location.href = "index.html")
-    .catch(err => {
-      console.error("Logout failed:", err);
-      alert("Logout failed: " + err.message);
-    });
-}
+  // === Sidebar Toggle ===
+  document.getElementById("menuIcon").onclick = () => {
+    document.getElementById("sideMenu").style.left = "0";
+  };
+  document.getElementById("closeIcon").onclick = () => {
+    document.getElementById("sideMenu").style.left = "-100%";
+  };
+
+  // === See More Transactions ===
+  document.getElementById("seeMoreBtn").addEventListener("click", () => {
+    window.location.href = "transaction.html";
+  });
+
+  // === Logout ===
+  function logout() {
+    auth.signOut()
+      .then(() => window.location.href = "index.html")
+      .catch(err => {
+        console.error("Logout failed:", err);
+        alert("Logout failed: " + err.message);
+      });
+  }
 </script>
 </body>
 </html>
