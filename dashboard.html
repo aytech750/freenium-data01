@@ -253,14 +253,16 @@
       toast.style.visibility = "hidden";
     }, 3000);
   }
+   
+ const sidebar = document.getElementById("sideMenu");
+document.getElementById("menuIcon").onclick = () => {
+  sidebar.classList.add("active");
+};
 
-  // === Sidebar Toggle ===
-  document.getElementById("menuIcon").onclick = () => {
-    document.getElementById("sideMenu").style.left = "0";
-  };
-  document.getElementById("closeIcon").onclick = () => {
-    document.getElementById("sideMenu").style.left = "-100%";
-  };
+document.getElementById("closeIcon").onclick = () => {
+  sidebar.classList.remove("active");
+};
+
 
   // === See More Transactions ===
   document.getElementById("seeMoreBtn").addEventListener("click", () => {
