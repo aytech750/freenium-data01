@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
   // ✅ Clubkonnect credentials
   const userID = "CK101252894";
-  const apiKey = "988DL2CSH2Y942I37AH84J9K8836R595UDC64O7I6S5NC5FXAM643ZYRR9QJT3T0";
+  const apiKey = process.env.CLUBKONNECT_API_KEY;
 
   // ✅ Construct request URL
   const url = `https://www.nellobytesystems.com/APIAirtimeV1.asp?UserID=${userID}&APIKey=${apiKey}&MobileNetwork=${MobileNetwork}&Amount=${Amount}&MobileNumber=${MobileNumber}&RequestID=${request_id}`;

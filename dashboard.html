@@ -56,32 +56,10 @@
      <div class="wallet-box">
   <h3>Wallet Balance:</h3>
   <p>₦<span id="walletBalance">0.00</span></p>
-  <button id="fundWalletBtn">Fund Wallet</button>
+  <button><a href="fundwallet.html">FundWallet</button>
 </div>
 
 </div>
-<div id="fund-wallet-modal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <span id="close-modal" style="cursor:pointer;">&times;</span>
-    <h2>Freenium Data</h2>
-    <h5>Fund Your Wallet</h5>
-
-    <!-- ✅ Start of Form -->
-    <form id="fundForm">
-      <div class="amount-wrapper">
-        <span class="naira-icon"></span>
-        <input type="number" id="amountToFund" placeholder="Enter amount" min="100" required />
-      </div>
-      <button type="submit" id="submit-fund">Submit</button>
-    </form>
-    <!-- ✅ End of Form -->
-
-    <div id="fund-loading" style="display:none;">Processing...</div>
-  </div>
-</div>
-
-
-
 <!-- Toast Notification -->
 <div id="toast" style="visibility:hidden; position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
  background:#4caf50; color:#fff; padding:10px 20px; border-radius:5px;"></div>
@@ -109,7 +87,7 @@
     <!-- Ads Section -->
     <section class="ads-section">
       <marquee behavior="scroll" direction="left">
-        🎉 Enjoy ₦100 on Every Referrals | Refer a friend and earn rewards 🤑
+        🎉 Enjoy ₦50 on Every 2 Referrals | Refer a friend and earn rewards 🤑
       </marquee>
     </section>
 
@@ -182,31 +160,6 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 const paystackPublicKey = "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75";
-
-// Elements
-const menuIcon = document.getElementById("menuIcon");
-const closeIcon = document.getElementById("closeIcon");
-const sideMenu = document.getElementById("sideMenu");
-const fundBtn = document.getElementById("fundWalletBtn");
-const modal = document.getElementById("fund-wallet-modal");
-const closeModal = document.getElementById("close-modal");
-const fundForm = document.getElementById("fundForm");
-const amountInput = document.getElementById("amountToFund");
-const loadingText = document.getElementById("fund-loading");
-const fundAmountInput = document.getElementById("amountToFund");
-
-// Sidebar Menu Toggle
-menuIcon.addEventListener("click", () => sideMenu.classList.add("active"));
-closeIcon.addEventListener("click", () => sideMenu.classList.remove("active"));
-
-// Fund Wallet Modal
-fundBtn.addEventListener("click", () => {
-  modal.style.display = "block";
-});
-closeModal.addEventListener("click", () => {
-  modal.style.display = "none";
-  amountInput.value = "";
-});
 
 // Auth
 let currentUser = null;
@@ -281,95 +234,6 @@ async function loadTransactions(uid) {
     }
   } catch (err) {
     console.error("Failed to load transactions:", err);
-  }
-}
-
-// Handle Wallet Funding Form
-fundForm.addEventListener("submit", async function (e) {
-  e.preventDefault();
-
-  const amount = parseInt(amountInput.value);
-  if (!amount || amount < 100) {
-    alert("Minimum amount is ₦100");
-    return;
-  }
-
-  const totalWithFee = calculatePaystackTotal(amount);
-  const reference = `ref_${currentUser.uid}_${Date.now()}`;
-
-  // Save pending transaction
-  await db.collection("payments").add({
-    uid: currentUser.uid,
-    amount,
-    reference,
-    status: "pending",
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  // Launch Paystack
-  const handler = PaystackPop.setup({
-    key: paystackPublicKey,
-    email: currentUser.email,
-    amount: totalWithFee * 100, // Kobo
-    currency: "NGN",
-    metadata: {
-      custom_fields: [
-        {
-          display_name: "User ID",
-          variable_name: "uid",
-          value: currentUser.uid
-        },
-        {
-          display_name: "Wallet Topup",
-          variable_name: "walletAmount",
-          value: amount
-        }
-      ]
-    },
-    callback: function (response) {
-      verifyPayment(response.reference, amount);
-    },
-    onClose: function () {
-      alert("Payment cancelled.");
-    }
-  });
-
-  handler.openIframe();
-});
-
-// Paystack Fee Calculation
-function calculatePaystackTotal(amount) {
-  const fee = amount >= 2500 ? amount * 0.015 + 100 : amount * 0.015;
-  return Math.ceil(amount + fee);
-}
-
-// Verify Payment
-async function verifyPayment(reference, amount) {
-  loadingText.style.display = "block";
-
-  try {
-    const res = await fetch("https://freenium-data01.vercel.app/api/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reference, amount })
-    });
-
-    const result = await res.json();
-    loadingText.style.display = "none";
-
-    if (result.success) {
-      showReceipt(reference, amount);
-      modal.style.display = "none";
-      fundAmountInput.value = "";
-      showToast("Wallet funded successfully!");
-      setTimeout(() => location.reload(), 3000);
-    } else {
-      showToast(result.message || "Verification failed.");
-    }
-  } catch (err) {
-    console.error("Error verifying:", err);
-    loadingText.style.display = "none";
-    showToast("Verification error. Try again.");
   }
 }
 
