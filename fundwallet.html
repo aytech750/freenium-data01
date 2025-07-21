@@ -2,145 +2,339 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FREENIUM DATA Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fund Wallet - Freenium Data</title>
+  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="style.css" />
-   <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9fafb;
+      color: #111827;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .brand-header img {
+      height: 40px;
+    }
+
+    .brand-header h1 {
+      font-size: 22px;
+      margin: 0;
+      color: #10b981;
+    }
+
+    h2 {
+      text-align: center;
+      color: #10b981;
+      margin-bottom: 10px;
+    }
+
+    p {
+      text-align: center;
+      color: #6b7280;
+    }
+
+    label {
+      display: block;
+      margin: 20px 0 5px;
+      font-weight: 600;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .amount-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .amount-box {
+      flex: 1 1 30%;
+      background: #e5f9f1;
+      color: #065f46;
+      padding: 10px;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      border: 2px solid transparent;
+      transition: 0.2s ease;
+    }
+
+    .amount-box:hover {
+      border-color: #10b981;
+    }
+
+    .fee-preview {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #4b5563;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 25px;
+      padding: 12px;
+      background: #10b981;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background: #059669;
+    }
+
+    .payment-options {
+      display: flex;
+      justify-content: center;
+      margin-top: 25px;
+      gap: 20px;
+      opacity: 0.8;
+    }
+
+    .payment-options img {
+      width: 40px;
+      height: auto;
+    }
+
+    #loading {
+      margin-top: 15px;
+      color: #555;
+      display: none;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10b981;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      animation: fadeInOut 3s ease-in-out forwards;
+      z-index: 9999;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; bottom: 10px; }
+      10% { opacity: 1; bottom: 20px; }
+      90% { opacity: 1; bottom: 20px; }
+      100% { opacity: 0; bottom: 10px; }
+    }
+    .input-with-icon {
+  position: relative;
+}
+
+.input-with-icon .naira-icon {
+  position: absolute;
+  top: 45%;
+  left: 12px;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #6b7280;
+  pointer-events: none;
+}
+
+.input-with-icon input[type="number"] {
+  padding-left: 32px; /* add space for the icon */
+}
+
+  </style>
 </head>
 <body>
-<div id="fund-wallet-modal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <span id="close-modal" style="cursor:pointer;">&times;</span>
-    <h2>Freenium Data</h2>
-    <h5>Fund Your Wallet</h5>
 
-    <!-- ✅ Start of Form -->
-    <form id="fundForm">
-      <div class="amount-wrapper">
-        <span class="naira-icon"></span>
-        <input type="number" id="amountToFund" placeholder="Enter amount" min="100" required />
-      </div>
-      <button type="submit" id="submit-fund">Submit</button>
-    </form>
-    <!-- ✅ End of Form -->
+<div class="container">
+  <!-- Branding -->
+  <div class="brand-header">
+    <img src="https://i.imgur.com/KTBvgla.png" alt="Logo" />
+    <h1>FREENIUM DATA</h1>
+  </div>
 
-    <div id="fund-loading" style="display:none;">Processing...</div>
+  <h2>Fund Your Wallet</h2>
+  <p>Select or enter amount to fund your wallet securely via Paystack</p>
+
+  <form id="fundForm">
+    <label for="amount">Enter Amount (₦)</label>
+   <div class="input-with-icon">
+  <span class="naira-icon">₦</span>
+  <input type="number" id="amount" min="100" required placeholder="Minimum ₦100" />
+</div>
+
+    <div class="amount-options">
+      <div class="amount-box" data-amount="500">₦100</div>
+      <div class="amount-box" data-amount="1000">₦200</div>
+      <div class="amount-box" data-amount="2000">₦500</div>
+      <div class="amount-box" data-amount="3000">₦1000</div>
+      <div class="amount-box" data-amount="5000">₦5000</div>
+    </div>
+    <div class="fee-preview" id="feeDisplay">You’ll be charged: ₦0</div>
+    <button type="submit">Pay Now</button>
+  </form>
+
+  <div id="loading">Verifying payment...</div>
+
+  <div class="payment-options">
+    <img src="https://cdn-icons-png.flaticon.com/512/349/349221.png" alt="MasterCard" />
+    <img src="https://cdn-icons-png.flaticon.com/512/196/196578.png" alt="Visa" />
+    <img src="https://i.imgur.com/n4Mv5kZ.png" alt="Paystack" style="height:24px;" />
   </div>
 </div>
+
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
-    // Elements
-const menuIcon = document.getElementById("menuIcon");
-const closeIcon = document.getElementById("closeIcon");
-const sideMenu = document.getElementById("sideMenu");
-const fundBtn = document.getElementById("fundWalletBtn");
-const modal = document.getElementById("fund-wallet-modal");
-const closeModal = document.getElementById("close-modal");
-const fundForm = document.getElementById("fundForm");
-const amountInput = document.getElementById("amountToFund");
-const loadingText = document.getElementById("fund-loading");
-const fundAmountInput = document.getElementById("amountToFund");
+  const fundForm = document.getElementById("fundForm");
+  const amountInput = document.getElementById("amount");
+  const feeDisplay = document.getElementById("feeDisplay");
+  const loadingText = document.getElementById("loading");
+  const amountBoxes = document.querySelectorAll(".amount-box");
 
-// Sidebar Menu Toggle
-menuIcon.addEventListener("click", () => sideMenu.classList.add("active"));
-closeIcon.addEventListener("click", () => sideMenu.classList.remove("active"));
+  // Dummy user (replace with Firebase later)
+  const currentUser = {
+    uid: "USER_UID_HERE",
+    email: "user@email.com"
+  };
 
-// Fund Wallet Modal
-fundBtn.addEventListener("click", () => {
-  modal.style.display = "block";
-});
-closeModal.addEventListener("click", () => {
-  modal.style.display = "none";
-  amountInput.value = "";
-});
-// Handle Wallet Funding Form
-fundForm.addEventListener("submit", async function (e) {
-  e.preventDefault();
+  // Amount preset box click
+  amountBoxes.forEach(box => {
+    box.addEventListener("click", () => {
+      const amount = box.getAttribute("data-amount");
+      amountInput.value = amount;
+      updateFeeDisplay(amount);
+    });
+  });
 
-  const amount = parseInt(amountInput.value);
-  if (!amount || amount < 100) {
-    alert("Minimum amount is ₦100");
-    return;
+  // Update fee preview on input
+  amountInput.addEventListener("input", () => {
+    updateFeeDisplay(amountInput.value);
+  });
+
+  function updateFeeDisplay(value) {
+    const amt = parseInt(value);
+    if (amt && amt >= 100) {
+      const total = calculatePaystackTotal(amt);
+      feeDisplay.textContent = `You’ll be charged: ₦${total}`;
+    } else {
+      feeDisplay.textContent = `Minimum amount is ₦100`;
+    }
   }
 
-  const totalWithFee = calculatePaystackTotal(amount);
-  const reference = `ref_${currentUser.uid}_${Date.now()}`;
+  fundForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-  // Save pending transaction
-  await db.collection("payments").add({
-    uid: currentUser.uid,
-    amount,
-    reference,
-    status: "pending",
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  // Launch Paystack
-  const handler = PaystackPop.setup({
-    key: paystackPublicKey,
-    email: currentUser.email,
-    amount: totalWithFee * 100, // Kobo
-    currency: "NGN",
-    metadata: {
-      custom_fields: [
-        {
-          display_name: "User ID",
-          variable_name: "uid",
-          value: currentUser.uid
-        },
-        {
-          display_name: "Wallet Topup",
-          variable_name: "walletAmount",
-          value: amount
-        }
-      ]
-    },
-    callback: function (response) {
-      verifyPayment(response.reference, amount);
-    },
-    onClose: function () {
-      alert("Payment cancelled.");
+    const amount = parseInt(amountInput.value);
+    if (!amount || amount < 100) {
+      showToast("Minimum amount is ₦100");
+      return;
     }
-  });
 
-  handler.openIframe();
-});
+    const totalWithFee = calculatePaystackTotal(amount);
+    const reference = `ref_${currentUser.uid}_${Date.now()}`;
 
-// Paystack Fee Calculation
-function calculatePaystackTotal(amount) {
-  const fee = amount >= 2500 ? amount * 0.015 + 100 : amount * 0.015;
-  return Math.ceil(amount + fee);
-}
-
-// Verify Payment
-async function verifyPayment(reference, amount) {
-  loadingText.style.display = "block";
-
-  try {
-    const res = await fetch("https://freenium-data01.vercel.app/api/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reference, amount })
+    const handler = PaystackPop.setup({
+      key: "pk_live_a16abbfa623ceada904715a69d75b03fc784ef75",
+      email: currentUser.email,
+      amount: totalWithFee * 100,
+      currency: "NGN",
+      metadata: {
+        custom_fields: [
+          {
+            display_name: "User ID",
+            variable_name: "uid",
+            value: currentUser.uid
+          },
+          {
+            display_name: "Wallet Topup",
+            variable_name: "walletAmount",
+            value: amount
+          }
+        ]
+      },
+      callback: function (response) {
+        verifyPayment(response.reference, amount);
+      },
+      onClose: function () {
+        showToast("Payment was cancelled.");
+      }
     });
 
-    const result = await res.json();
-    loadingText.style.display = "none";
+    handler.openIframe();
+  });
 
-    if (result.success) {
-      showReceipt(reference, amount);
-      modal.style.display = "none";
-      fundAmountInput.value = "";
-      showToast("Wallet funded successfully!");
-      setTimeout(() => location.reload(), 3000);
-    } else {
-      showToast(result.message || "Verification failed.");
-    }
-  } catch (err) {
-    console.error("Error verifying:", err);
-    loadingText.style.display = "none";
-    showToast("Verification error. Try again.");
+  function calculatePaystackTotal(amount) {
+    const fee = amount >= 2500 ? amount * 0.015 + 100 : amount * 0.015;
+    return Math.ceil(amount + fee);
   }
-}
+
+  async function verifyPayment(reference, amount) {
+    loadingText.style.display = "block";
+    try {
+      const res = await fetch("https://freenium-data01.vercel.app/api/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reference, amount })
+      });
+
+      const result = await res.json();
+      loadingText.style.display = "none";
+
+      if (result.success) {
+        showToast("Wallet funded successfully!");
+        fundForm.reset();
+        feeDisplay.textContent = "You’ll be charged: ₦0";
+        setTimeout(() => location.reload(), 2000);
+      } else {
+        showToast(result.message || "Verification failed.");
+      }
+    } catch (err) {
+      console.error(err);
+      loadingText.style.display = "none";
+      showToast("Verification error. Try again.");
+    }
+  }
+
+  function showToast(message) {
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
 </script>
+
 </body>
 </html>
