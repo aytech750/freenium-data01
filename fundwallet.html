@@ -196,10 +196,10 @@
 </div>
 
     <div class="amount-options">
-      <div class="amount-box" data-amount="500">₦100</div>
-      <div class="amount-box" data-amount="1000">₦200</div>
-      <div class="amount-box" data-amount="2000">₦500</div>
-      <div class="amount-box" data-amount="3000">₦1000</div>
+      <div class="amount-box" data-amount="100">₦100</div>
+      <div class="amount-box" data-amount="200">₦200</div>
+      <div class="amount-box" data-amount="500">₦500</div>
+      <div class="amount-box" data-amount="1000">₦1000</div>
       <div class="amount-box" data-amount="5000">₦5000</div>
     </div>
     <div class="fee-preview" id="feeDisplay">You’ll be charged: ₦0</div>
@@ -313,13 +313,11 @@
       loadingText.style.display = "none";
 
       if (result.success) {
-        showToast("Wallet funded successfully!");
-        fundForm.reset();
-        feeDisplay.textContent = "You’ll be charged: ₦0";
-        setTimeout(() => location.reload(), 2000);
-      } else {
-        showToast(result.message || "Verification failed.");
-      }
+  window.location.href = `/receipt.html?status=success&amount=${amount}&ref=${reference}`;
+} else {
+  window.location.href = `/receipt.html?status=pending&amount=${amount}&ref=${reference}`;
+}
+
     } catch (err) {
       console.error(err);
       loadingText.style.display = "none";

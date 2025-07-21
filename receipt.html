@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Payment Receipt</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .receipt-card {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .status-icon {
+      font-size: 50px;
+      margin-bottom: 20px;
+    }
+
+    .status-icon.success {
+      color: #10b981;
+    }
+
+    .status-icon.pending {
+      color: #ef4444;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    .amount {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .details {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .logo {
+      height: 50px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="receipt-card">
+  <div id="statusIcon"></div>
+
+  <div id="receiptInfo"></div>
+
+  <div class="details" id="detailsInfo"></div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get("status");
+  const amount = params.get("amount");
+  const ref = params.get("ref");
+
+  const statusIcon = document.getElementById("statusIcon");
+  const receiptInfo = document.getElementById("receiptInfo");
+  const detailsInfo = document.getElementById("detailsInfo");
+
+  if (status === "success") {
+    statusIcon.innerHTML = `<img src="https://i.imgur.com/KTBvgla.png" class="logo" alt="Freenium Data">`;
+    receiptInfo.innerHTML = `<h2>Transfer Successful</h2><div class="amount">₦${amount}</div>`;
+  } else {
+    statusIcon.innerHTML = `<i class="fa-solid fa-times-circle status-icon pending"></i>`;
+    receiptInfo.innerHTML = `<h2>Transaction Pending</h2><div class="amount">₦${amount}</div>`;
+  }
+
+  const now = new Date().toLocaleString();
+  detailsInfo.innerHTML = `Ref: ${ref}<br/>Time: ${now}`;
+</script>
+
+</body>
+</html>
