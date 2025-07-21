@@ -2,95 +2,152 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Payment Receipt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transaction Receipt - Freenium Data</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f3f4f6;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
       padding: 20px;
+      background-color: #f9f9f9;
     }
-
-    .receipt-card {
+    .receipt-container {
+      max-width: 500px;
+      margin: auto;
       background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 400px;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 30px 20px;
       text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
-
-    .status-icon {
-      font-size: 50px;
-      margin-bottom: 20px;
-    }
-
-    .status-icon.success {
-      color: #10b981;
-    }
-
-    .status-icon.pending {
-      color: #ef4444;
-    }
-
-    h2 {
-      margin-bottom: 10px;
-    }
-
-    .amount {
-      font-size: 24px;
-      font-weight: bold;
-      margin: 10px 0;
-    }
-
-    .details {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #6b7280;
-    }
-
     .logo {
-      height: 50px;
-      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 15px;
     }
+    .logo img {
+      width: 40px;
+      height: 40px;
+    }
+    .status.success {
+      color: #2ecc71;
+      font-weight: bold;
+    }
+    .status.failed {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .details {
+      text-align: left;
+      margin-top: 20px;
+    }
+    .details p {
+      margin: 10px 0;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+    .actions {
+      margin-top: 30px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .actions button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .download { background-color: #3498db; color: white; }
+    .share { background-color: #2ecc71; color: white; }
   </style>
 </head>
 <body>
+  <div class="receipt-container" id="receipt">
+    <div class="logo">
+      <img src="https://i.imgur.com/KTBvgla.png" alt="Freenium Data Logo" />
+      <h2>Freenium Data</h2>
+    </div>
+    <h3 class="status success" id="statusText">Transaction Successful</h3>
 
-<div class="receipt-card">
-  <div id="statusIcon"></div>
+    <div class="details">
+      <p><span>Transaction ID:</span> <span id="txn-id">-</span></p>
+      <p><span>Amount:</span> <span>₦<span id="amount">-</span></span></p>
+      <p><span>Phone Number:</span> <span id="phone">-</span></p>
+      <p><span>Date:</span> <span id="date">-</span></p>
+      <p><span>Network:</span> <span id="network">-</span></p>
+      <p><span>Plan:</span> <span id="plan">-</span></p>
+    </div>
 
-  <div id="receiptInfo"></div>
+    <div class="actions">
+      <button class="download" onclick="downloadReceipt()">Download</button>
+      <button class="share" onclick="shareReceipt()">Share</button>
+    </div>
+  </div>
 
-  <div class="details" id="detailsInfo"></div>
-</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+      const firebaseConfig = {
+    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+    authDomain: "freenium-data001.firebaseapp.com",
+    projectId: "freenium-data001",
+    storageBucket: "freenium-data001.appspot.com",
+    messagingSenderId: "867380700269",
+    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  };
 
-<script>
-  const params = new URLSearchParams(window.location.search);
-  const status = params.get("status");
-  const amount = params.get("amount");
-  const ref = params.get("ref");
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+    const query = new URLSearchParams(window.location.search);
+    document.getElementById('txn-id').textContent = query.get('ref') || '-';
+    document.getElementById('amount').textContent = query.get('amount') || '-';
+    document.getElementById('phone').textContent = query.get('phone') || '-';
+    document.getElementById('date').textContent = query.get('date') || new Date().toISOString().slice(0,10);
+    document.getElementById('network').textContent = query.get('network') || '-';
+    document.getElementById('plan').textContent = query.get('plan') || '-';
 
-  const statusIcon = document.getElementById("statusIcon");
-  const receiptInfo = document.getElementById("receiptInfo");
-  const detailsInfo = document.getElementById("detailsInfo");
+    const status = query.get('status') || 'success';
+    const statusText = document.getElementById('statusText');
+    if (status === 'failed') {
+      statusText.textContent = 'Transaction Failed';
+      statusText.classList.remove('success');
+      statusText.classList.add('failed');
+    }
 
-  if (status === "success") {
-    statusIcon.innerHTML = `<img src="https://i.imgur.com/KTBvgla.png" class="logo" alt="Freenium Data">`;
-    receiptInfo.innerHTML = `<h2>Transfer Successful</h2><div class="amount">₦${amount}</div>`;
-  } else {
-    statusIcon.innerHTML = `<i class="fa-solid fa-times-circle status-icon pending"></i>`;
-    receiptInfo.innerHTML = `<h2>Transaction Pending</h2><div class="amount">₦${amount}</div>`;
-  }
+    function downloadReceipt() {
+      html2canvas(document.getElementById('receipt')).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "freenium-receipt.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
 
-  const now = new Date().toLocaleString();
-  detailsInfo.innerHTML = `Ref: ${ref}<br/>Time: ${now}`;
-</script>
+    function shareReceipt() {
+      html2canvas(document.getElementById('receipt')).then(canvas => {
+        canvas.toBlob(blob => {
+          const file = new File([blob], "freenium-receipt.png", { type: "image/png" });
 
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({
+              title: "Freenium Receipt",
+              text: "Here is your transaction receipt from Freenium Data.",
+              files: [file]
+            });
+          } else {
+            alert("Sharing not supported on your device.");
+          }
+        });
+      });
+    }
+  </script>
 </body>
 </html>

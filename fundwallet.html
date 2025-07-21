@@ -162,7 +162,7 @@
 
 .input-with-icon .naira-icon {
   position: absolute;
-  top: 45%;
+  top: 47%;
   left: 12px;
   transform: translateY(-50%);
   font-size: 16px;
@@ -217,20 +217,43 @@
 </div>
 
 <script src="https://js.paystack.co/v1/inline.js"></script>
-<script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+    authDomain: "freenium-data001.firebaseapp.com",
+    projectId: "freenium-data001",
+    storageBucket: "freenium-data001.appspot.com",
+    messagingSenderId: "867380700269",
+    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
   const fundForm = document.getElementById("fundForm");
   const amountInput = document.getElementById("amount");
   const feeDisplay = document.getElementById("feeDisplay");
   const loadingText = document.getElementById("loading");
   const amountBoxes = document.querySelectorAll(".amount-box");
 
-  // Dummy user (replace with Firebase later)
-  const currentUser = {
-    uid: "USER_UID_HERE",
-    email: "user@email.com"
-  };
+  let currentUser;
 
-  // Amount preset box click
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      currentUser = {
+        uid: user.uid,
+        email: user.email
+      };
+    } else {
+      window.location.href = "/login.html";
+    }
+  });
+
   amountBoxes.forEach(box => {
     box.addEventListener("click", () => {
       const amount = box.getAttribute("data-amount");
@@ -239,7 +262,6 @@
     });
   });
 
-  // Update fee preview on input
   amountInput.addEventListener("input", () => {
     updateFeeDisplay(amountInput.value);
   });
@@ -273,16 +295,8 @@
       currency: "NGN",
       metadata: {
         custom_fields: [
-          {
-            display_name: "User ID",
-            variable_name: "uid",
-            value: currentUser.uid
-          },
-          {
-            display_name: "Wallet Topup",
-            variable_name: "walletAmount",
-            value: amount
-          }
+          { display_name: "User ID", variable_name: "uid", value: currentUser.uid },
+          { display_name: "Wallet Topup", variable_name: "walletAmount", value: amount }
         ]
       },
       callback: function (response) {
@@ -314,10 +328,17 @@
       loadingText.style.display = "none";
 
       if (result.success) {
-  window.location.href = `/receipt.html?status=success&amount=${amount}&ref=${reference}`;
-} else {
-  window.location.href = `/receipt.html?status=pending&amount=${amount}&ref=${reference}`;
-}
+        await addDoc(collection(db, "transactions"), {
+          uid: currentUser.uid,
+          type: "wallet",
+          status: "success",
+          amount: amount,
+          reference: reference,
+          timestamp: new Date()
+        });
+
+        window.location.href = `/receipt.html?status=success&amount=${amount}&ref=${reference}&network=Wallet&plan=Wallet+Funding&phone=${currentUser.email}&date=${new Date().toISOString().split('T')[0]}`;
+      }
 
     } catch (err) {
       console.error(err);
@@ -333,6 +354,8 @@
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
   }
+
+
 </script>
 
 </body>
