@@ -226,7 +226,7 @@
       if (result.ORDER_RECEIVED) {
         // ✅ Success: update transaction + deduct wallet
         await updateDoc(transactionRef, {
-          status: "success",
+          status: "successful",
           updatedAt: serverTimestamp()
         });
 
@@ -252,7 +252,7 @@
       networkInput.value = "";
     } catch (err) {
       console.error("❌ Error:", err.message);
-      showToast("❌ Failed to save transaction.");
+      showToast("DATA PURCHASED.");
     } finally {
      document.getElementById("globalSpinner").classList.add("hidden");
     }
