@@ -192,7 +192,7 @@
     <label for="amount">Enter Amount (₦)</label>
    <div class="input-with-icon">
   <span class="naira-icon">₦</span>
-  <input type="number" id="amount" min="100" required placeholder="Minimum ₦100" />
+  <input type="number" id="amount" min="100" required placeholder="Minimum ₦100"/>
 </div>
 
     <div class="amount-options">
@@ -337,7 +337,8 @@
           timestamp: new Date()
         });
 
-        window.location.href = `/receipt.html?status=success&amount=${amount}&ref=${reference}&network=Wallet&plan=Wallet+Funding&phone=${currentUser.email}&date=${new Date().toISOString().split('T')[0]}`;
+      
+
       }
 
     } catch (err) {
