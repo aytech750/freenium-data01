@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Enter Transaction PIN - Freenium Data</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f8f9fa;
+    }
+
+    .pin-container {
+      text-align: center;
+      padding: 30px;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+
+    .pin-display {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #999;
+      background-color: transparent;
+    }
+
+    .dot.filled {
+      background-color: #000;
+    }
+
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 70px);
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .numpad button {
+      padding: 20px;
+      font-size: 20px;
+      border: none;
+      background-color: #e6e6e6;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .numpad button:hover {
+      background-color: #ccc;
+    }
+
+    .spinner {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .spinner img {
+      width: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .toast {
+      margin-top: 20px;
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="pin-container">
+    <h2>Enter Transaction PIN</h2>
+    <div class="pin-display">
+      <div class="dot" id="dot1"></div>
+      <div class="dot" id="dot2"></div>
+      <div class="dot" id="dot3"></div>
+      <div class="dot" id="dot4"></div>
+    </div>
+    <div class="numpad">
+      <button onclick="enterDigit('1')">1</button>
+      <button onclick="enterDigit('2')">2</button>
+      <button onclick="enterDigit('3')">3</button>
+      <button onclick="enterDigit('4')">4</button>
+      <button onclick="enterDigit('5')">5</button>
+      <button onclick="enterDigit('6')">6</button>
+      <button onclick="enterDigit('7')">7</button>
+      <button onclick="enterDigit('8')">8</button>
+      <button onclick="enterDigit('9')">9</button>
+      <button onclick="deleteDigit()"><i class="fas fa-delete-left"></i></button>
+      <button onclick="enterDigit('0')">0</button>
+      <button onclick="clearPin()">C</button>
+    </div>
+
+    <div class="spinner" id="spinner">
+      <img src="https://i.imgur.com/KTBvgla.png" alt="loading..."/>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_BUCKET",
+      messagingSenderId: "YOUR_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+
+    let pin = "";
+
+    function updateDots() {
+      for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById("dot" + i);
+        dot.classList.toggle("filled", i <= pin.length);
+      }
+    }
+
+    window.enterDigit = function(digit) {
+      if (pin.length < 4) {
+        pin += digit;
+        updateDots();
+        if (pin.length === 4) {
+          checkPIN();
+        }
+      }
+    }
+
+    window.deleteDigit = function() {
+      pin = pin.slice(0, -1);
+      updateDots();
+    }
+
+    window.clearPin = function() {
+      pin = "";
+      updateDots();
+    }
+
+    function showToast(message) {
+      document.getElementById("toast").innerText = message;
+    }
+
+    async function checkPIN() {
+      document.getElementById("spinner").style.display = "block";
+      showToast("");
+
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          const uid = user.uid;
+          const userRef = doc(db, "users", uid);
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            if (userData.transactionPin === pin) {
+              // redirect with query string (or localStorage/sessionStorage)
+              setTimeout(() => {
+                window.location.href = `receipt.html?uid=${uid}`;
+              }, 1000);
+            } else {
+              showToast("❌ Incorrect PIN");
+              clearPin();
+              document.getElementById("spinner").style.display = "none";
+            }
+          } else {
+            showToast("❌ User not found");
+            clearPin();
+            document.getElementById("spinner").style.display = "none";
+          }
+        } else {
+          showToast("Not signed in");
+          document.getElementById("spinner").style.display = "none";
+        }
+      });
+    }
+  </script>
+</body>
+</html>

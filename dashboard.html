@@ -87,6 +87,30 @@
         🎉 Enjoy ₦50 on Every 2 Referrals | Refer a friend and earn rewards 🤑
       </marquee>
     </section>
+    <!-- 🔐 PIN Setup Modal -->
+<div id="pinReminderModal" class="fixed inset-0 z-50 bg-black bg-opacity-50 hidden flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-xl p-6 w-[90%] max-w-sm relative">
+    <h2 class="text-xl font-bold mb-3 text-center">Set Your Transaction Pin</h2>
+    <p class="text-sm text-gray-500 mb-4 text-center">Secure your transactions with a 4-digit pin.</p>
+
+    <div id="pinDisplay" class="flex justify-center gap-3 mb-4">
+      <div class="w-10 h-10 border-2 border-gray-300 rounded-lg flex items-center justify-center text-xl font-bold" id="dot1"></div>
+      <div class="w-10 h-10 border-2 border-gray-300 rounded-lg flex items-center justify-center text-xl font-bold" id="dot2"></div>
+      <div class="w-10 h-10 border-2 border-gray-300 rounded-lg flex items-center justify-center text-xl font-bold" id="dot3"></div>
+      <div class="w-10 h-10 border-2 border-gray-300 rounded-lg flex items-center justify-center text-xl font-bold" id="dot4"></div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3 mb-4">
+      ${[1,2,3,4,5,6,7,8,9,'←',0,'✓'].map(btn => `
+        <button class="bg-gray-200 py-2 rounded-lg text-lg font-semibold" onclick="handlePinKey('${btn}')">${btn}</button>
+      `).join('')}
+    </div>
+
+    <div class="flex justify-center">
+      <div id="pinSpinner" class="hidden animate-spin w-6 h-6 border-2 border-t-green-500 border-gray-200 rounded-full"></div>
+    </div>
+  </div>
+</div>
 
     <!-- Transaction History -->
     <section id="transaction-history">
@@ -287,5 +311,54 @@ document.getElementById("closeIcon").onclick = () => {
       });
   }
 </script>
+<script type="module">
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+  import { app } from './firebase-config.js'; // Update path if needed
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const modal = document.getElementById("pinReminderModal");
+  const pinSpinner = document.getElementById("pinSpinner");
+  let pinInput = [];
+
+  window.handlePinKey = async (key) => {
+    if (key === "←") {
+      pinInput.pop();
+    } else if (key === "✓") {
+      if (pinInput.length === 4) {
+        const uid = auth.currentUser?.uid;
+        pinSpinner.classList.remove("hidden");
+        try {
+          await setDoc(doc(db, "users", uid), { transactionPin: pinInput.join("") }, { merge: true });
+          modal.classList.add("hidden");
+        } catch (e) {
+          alert("❌ Failed to save pin");
+        }
+        pinSpinner.classList.add("hidden");
+      }
+    } else if (pinInput.length < 4) {
+      pinInput.push(key);
+    }
+    updateDots();
+  };
+
+  const updateDots = () => {
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`dot${i + 1}`).innerText = pinInput[i] || "";
+    }
+  };
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists() || !userSnap.data().transactionPin) {
+        modal.classList.remove("hidden");
+      }
+    }
+  });
+</script>
+
 </body>
 </html>
