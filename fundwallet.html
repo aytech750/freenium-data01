@@ -315,38 +315,41 @@
     return Math.ceil(amount + fee);
   }
 
-  async function verifyPayment(reference, amount) {
-    loadingText.style.display = "block";
-    try {
-      const res = await fetch("https://freenium-data01.vercel.app/api/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reference, amount })
+ async function verifyPayment(reference, amount) {
+  loadingText.style.display = "block";
+  try {
+    const res = await fetch("https://freenium-data01.vercel.app/api/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reference, amount })
+    });
+
+    const result = await res.json();
+    loadingText.style.display = "none";
+
+    if (result.success) {
+      await addDoc(collection(db, "transactions"), {
+        uid: currentUser.uid,
+        type: "wallet",
+        status: "success",
+        amount: amount,
+        reference: reference,
+        timestamp: new Date()
       });
 
-      const result = await res.json();
-      loadingText.style.display = "none";
-
-      if (result.success) {
-        await addDoc(collection(db, "transactions"), {
-          uid: currentUser.uid,
-          type: "wallet",
-          status: "success",
-          amount: amount,
-          reference: reference,
-          timestamp: new Date()
-        });
-
-      
-
-      }
-
-    } catch (err) {
-      console.error(err);
-      loadingText.style.display = "none";
-      showToast("Verification error. Try again.");
+      // ✅ Redirect to receipt page
+      window.location.href = `receipt.html?reference=${reference}`;
+    } else {
+      showToast("Verification failed. Try again.");
     }
+
+  } catch (err) {
+    console.error(err);
+    loadingText.style.display = "none";
+    showToast("Verification error. Try again.");
   }
+}
+
 
   function showToast(message) {
     const toast = document.createElement("div");
