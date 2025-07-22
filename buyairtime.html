@@ -35,171 +35,120 @@
     </div>
 
   <form id="airtime-form" autocomplete="on">
-  <input type="tel" id="phone" placeholder="Enter Phone Number" required autocomplete="tel" />
-  <div class="amount-wrapper">
-    <span class="naira-icon">₦</span>
-    <input type="number" id="amount" placeholder="Enter amount" required autocomplete="off" />
-  </div>
+    <input type="tel" id="phone" placeholder="Enter Phone Number" required autocomplete="tel" />
+    <div class="amount-wrapper">
+      <span class="naira-icon">₦</span>
+      <input type="number" id="amount" placeholder="Enter amount" required autocomplete="off" />
+    </div>
 
-  <button id="buyBtn">Buy Now</button>
-  <a href="dashboard.html" class="back-arrow">&lt; PREVIOUS</a>
-</form>
+    <button id="buyBtn">Buy Now</button>
+    <a href="dashboard.html" class="back-arrow">&lt; PREVIOUS</a>
+  </form>
 
-    <div id="toast" class="toast">Transaction Successful</div>
-  </section>
+  <div id="toast" class="toast">Transaction Successful</div>
+</section>
 
- <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    updateDoc,
-    collection,
-    addDoc,
-    serverTimestamp,
-    increment
-  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  collection,
+  addDoc,
+  serverTimestamp,
+  increment
+} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
-    authDomain: "freenium-data001.firebaseapp.com",
-    projectId: "freenium-data001",
-    storageBucket: "freenium-data001.appspot.com",
-    messagingSenderId: "867380700269",
-    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+  authDomain: "freenium-data001.firebaseapp.com",
+  projectId: "freenium-data001",
+  storageBucket: "freenium-data001.appspot.com",
+  messagingSenderId: "867380700269",
+  appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-  const networkMap = {
-    mtn: "01",
-    glo: "02",
-    airtel: "04",
-    "9mobile": "03"
-  };
+const networkMap = {
+  mtn: "01",
+  glo: "02",
+  airtel: "04",
+  "9mobile": "03"
+};
 
-  window.selectedNetwork = function(divElement) {
-    document.querySelectorAll('.network').forEach(net => net.classList.remove('selected'));
-    divElement.classList.add('selected');
-    const selected = divElement.querySelector('img').dataset.network;
-    document.getElementById('selectedNetwork').value = selected;
-    console.log("✅ Network selected:", selected);
-  };
+window.selectedNetwork = function(divElement) {
+  document.querySelectorAll('.network').forEach(net => net.classList.remove('selected'));
+  divElement.classList.add('selected');
+  const selected = divElement.querySelector('img').dataset.network;
+  document.getElementById('selectedNetwork').value = selected;
+  console.log("✅ Network selected:", selected);
+};
 
-  function showToast(message) {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 3000);
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 3000);
+}
+
+// Buy Button Listener
+
+document.getElementById("buyBtn").addEventListener("click", async (e) => {
+  e.preventDefault();
+
+  const selectedNetwork = document.getElementById("selectedNetwork").value.toLowerCase();
+  const phone = document.getElementById("phone").value.trim();
+  const amount = parseFloat(document.getElementById("amount").value);
+
+  if (!selectedNetwork || !phone || isNaN(amount) || amount <= 0) {
+    alert("🚫 Please complete all fields correctly.");
+    return;
   }
 
-  document.getElementById("buyBtn").addEventListener("click", async (e) => {
-    e.preventDefault();
+  const phoneRegex = /^0\d{10}$/;
+  if (!phoneRegex.test(phone)) {
+    alert("📵 Invalid phone number format.");
+    return;
+  }
 
-    const selectedNetwork = document.getElementById("selectedNetwork").value.toLowerCase();
-    const phone = document.getElementById("phone").value.trim();
-    const amount = parseFloat(document.getElementById("amount").value);
+  const networkId = networkMap[selectedNetwork];
+  if (!networkId) {
+    alert("🚫 Invalid network selected.");
+    return;
+  }
 
-    if (!selectedNetwork || !phone || isNaN(amount) || amount <= 0) {
-      alert("🚫 Please complete all fields correctly.");
-      return;
-    }
+  const confirmPurchase = confirm(`Confirm airtime purchase of ₦${amount} to ${phone}?`);
+  if (!confirmPurchase) return;
 
-    const phoneRegex = /^0\d{10}$/;
-    if (!phoneRegex.test(phone)) {
-      alert("📵 Invalid phone number format.");
-      return;
-    }
+  const user = auth.currentUser;
+  if (!user) {
+    alert("❌ Please log in to continue.");
+    return;
+  }
 
-    const networkId = networkMap[selectedNetwork];
-    if (!networkId) {
-      alert("🚫 Invalid network selected.");
-      return;
-    }
+  const uid = user.uid;
+  const requestId = `airtime_${uid}_${Date.now()}`;
 
-    const confirmPurchase = confirm(`Confirm airtime purchase of ₦${amount} to ${phone}?`);
-    if (!confirmPurchase) return;
+  // Store purchase info for pin verification
+  sessionStorage.setItem("pending_airtime_tx", JSON.stringify({
+    uid,
+    selectedNetwork,
+    phone,
+    amount,
+    requestId,
+    networkId
+  }));
 
-    const user = auth.currentUser;
-    if (!user) {
-      alert("❌ Please log in to continue.");
-      return;
-    }
-
-    const uid = user.uid;
-    const requestId = `airtime_${uid}_${Date.now()}`;
-    const userRef = doc(db, "users", uid);
-
-    try {
-      const userSnap = await getDoc(userRef);
-      const wallet = userSnap.data().wallet || 0;
-
-      if (wallet < amount) {
-        alert("🚫 Insufficient wallet balance.");
-        return;
-      }
-
-      // Log transaction as pending
-      await addDoc(collection(db, "transactions"), {
-        uid,
-        type: "airtime",
-        phone,
-        network: selectedNetwork,
-        amount,
-        status: "pending",
-        request_id: requestId,
-        timestamp: serverTimestamp()
-      });
-
-      document.getElementById("globalSpinner").classList.remove("hidden");
-
-      // 🚀 SEND TO BACKEND (make sure your backend reads these keys exactly!)
-      const response = await fetch("https://freenium-data01.vercel.app/api/airtime", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          MobileNetwork: networkId,
-          MobileNumber: phone,
-          Amount: amount,
-          request_id: requestId
-        })
-      });
-
-      const result = await response.json();
-      console.log("📡 API Response:", result);
-
-       if (result.statuscode === "100" || result.status?.toLowerCase() === "order_received") {
-        await updateDoc(userRef, { wallet: increment(-amount) });
-
-        await addDoc(collection(db, "transactions"), {
-          uid,
-          type: "airtime",
-          phone,
-          network: selectedNetwork,
-          amount,
-          status: "success",
-          request_id: requestId,
-          timestamp: serverTimestamp()
-        });
-
-        showToast("✅ Airtime purchase successful!");
-      } else {
-        showToast("❌ Failed: " + (result.Message || "Unknown error"));
-      }
-
-    } catch (err) {
-      console.error("🔥 Error:", err);
-      showToast("❌ Something went wrong.");
-    } finally {
-      document.getElementById("globalSpinner").classList.add("hidden");
-    }
-  });
+  // Redirect to transaction pin page
+  window.location.href = `pin.html?next=airtime`;
+});
 </script>
-
 
 </body>
 </html>

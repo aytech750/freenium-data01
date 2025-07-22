@@ -123,14 +123,14 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-   const firebaseConfig = {
-    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
-    authDomain: "freenium-data001.firebaseapp.com",
-    projectId: "freenium-data001",
-    storageBucket: "freenium-data001.appspot.com",
-    messagingSenderId: "867380700269",
-    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+      authDomain: "freenium-data001.firebaseapp.com",
+      projectId: "freenium-data001",
+      storageBucket: "freenium-data001.appspot.com",
+      messagingSenderId: "867380700269",
+      appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+    };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
@@ -153,20 +153,21 @@
           checkPIN();
         }
       }
-    }
+    };
 
     window.deleteDigit = function() {
       pin = pin.slice(0, -1);
       updateDots();
-    }
+    };
 
     window.clearPin = function() {
       pin = "";
       updateDots();
-    }
+    };
 
     function showToast(message) {
-      document.getElementById("toast").innerText = message;
+      const toast = document.getElementById("toast");
+      toast.innerText = message;
     }
 
     async function checkPIN() {
@@ -174,32 +175,47 @@
       showToast("");
 
       onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          const uid = user.uid;
-          const userRef = doc(db, "users", uid);
-          const userSnap = await getDoc(userRef);
-
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
-            if (userData.transactionPin === pin) {
-              // redirect with query string (or localStorage/sessionStorage)
-              setTimeout(() => {
-                window.location.href = `receipt.html?uid=${uid}`;
-              }, 1000);
-            } else {
-              showToast("❌ Incorrect PIN");
-              clearPin();
-              document.getElementById("spinner").style.display = "none";
-            }
-          } else {
-            showToast("❌ User not found");
-            clearPin();
-            document.getElementById("spinner").style.display = "none";
-          }
-        } else {
-          showToast("Not signed in");
-          document.getElementById("spinner").style.display = "none";
+        if (!user) {
+          showToast("⚠️ Not signed in");
+          return;
         }
+
+        const uid = user.uid;
+        const userDoc = await getDoc(doc(db, "users", uid));
+
+        if (!userDoc.exists()) {
+          showToast("❌ User not found");
+          return;
+        }
+
+        const userData = userDoc.data();
+        if (userData.transactionPin !== pin) {
+          showToast("❌ Incorrect PIN");
+          clearPin();
+          document.getElementById("spinner").style.display = "none";
+          return;
+        }
+
+        // ✅ PIN is correct — now redirect
+        const tx = JSON.parse(localStorage.getItem("transactionDetails"));
+        if (!tx) {
+          showToast("⚠️ Transaction data missing");
+          return;
+        }
+
+        const redirectMap = {
+          data: "receipt.html",
+          airtime: "airtime-receipt.html",
+          electricity: "electricity-receipt.html",
+          tv: "tv-receipt.html",
+          wallet: "wallet-receipt.html"
+        };
+
+        const receiptPage = redirectMap[tx.type] || "receipt.html";
+
+        setTimeout(() => {
+          window.location.href = receiptPage;
+        }, 1000);
       });
     }
   </script>

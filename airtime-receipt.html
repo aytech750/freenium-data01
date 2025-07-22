@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Airtime Receipt - Freenium Data</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
+  <style>
+    .receipt-card {
+      max-width: 400px;
+      margin: 2rem auto;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+    }
+    .receipt-card h2 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+    .receipt-detail {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="receipt-card">
+    <div class="text-center mb-4">
+      <img src="https://i.imgur.com/KTBvgla.png" alt="Freenium Data Logo" class="w-16 h-16 mx-auto" />
+      <h2 class="text-xl font-bold">Airtime Purchase Receipt</h2>
+    </div>
+
+    <div id="receiptContent">
+      <div class="receipt-detail">
+        <span>Network:</span>
+        <span id="network"></span>
+      </div>
+      <div class="receipt-detail">
+        <span>Phone Number:</span>
+        <span id="phone"></span>
+      </div>
+      <div class="receipt-detail">
+        <span>Amount:</span>
+        <span id="amount"></span>
+      </div>
+      <div class="receipt-detail">
+        <span>Reference:</span>
+        <span id="reference"></span>
+      </div>
+      <div class="receipt-detail">
+        <span>Status:</span>
+        <span id="status"></span>
+      </div>
+      <div class="receipt-detail">
+        <span>Date:</span>
+        <span id="date"></span>
+      </div>
+    </div>
+
+    <div class="text-center mt-6">
+      <button onclick="window.print()" class="bg-green-600 text-white px-4 py-2 rounded-full">Download Receipt</button>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const network = urlParams.get("network");
+    const phone = urlParams.get("phone");
+    const amount = urlParams.get("amount");
+    const reference = urlParams.get("reference");
+    const status = urlParams.get("status") || "Pending";
+    const date = new Date().toLocaleString();
+
+    document.getElementById("network").textContent = network;
+    document.getElementById("phone").textContent = phone;
+    document.getElementById("amount").textContent = `₦${amount}`;
+    document.getElementById("reference").textContent = reference;
+    document.getElementById("status").textContent = status;
+    document.getElementById("date").textContent = date;
+  </script>
+</body>
+</html>
