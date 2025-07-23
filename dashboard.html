@@ -123,16 +123,6 @@
     <button onclick="window.print()">Print Receipt</button>
   </div>
 </div>
-   <!-- PIN Setup Modal -->
-<div id="setPinModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-  <div class="bg-white rounded-lg shadow-xl w-96 p-6 text-center">
-    <h2 class="text-xl font-semibold mb-4">Set Your Transaction PIN</h2>
-    <p class="text-sm text-gray-500 mb-4">You need a 4-digit PIN to authorize transactions.</p>
-    <input id="pinInput" type="password" maxlength="4" class="w-full px-4 py-2 border border-gray-300 rounded text-center text-lg tracking-widest" placeholder="Enter 4-digit PIN" />
-    <button onclick="savePin()" class="mt-4 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Save PIN</button>
-  </div>
-</div>
-
   </main>
 
   <!-- Bottom Navigation -->
@@ -187,10 +177,6 @@
       }
 
    const userData = userDoc.data();
-if (!userData.pin) {
-  document.getElementById("setPinModal").classList.remove("hidden");
-}
-
 const email = user.email;
 const name = userData.name || "User";
 const balance = parseFloat(userData.wallet || 0).toFixed(2);
@@ -300,23 +286,6 @@ document.getElementById("closeIcon").onclick = () => {
         alert("Logout failed: " + err.message);
       });
   }
-  async function savePin() {
-  const pin = document.getElementById("pinInput").value;
-  if (pin.length !== 4 || isNaN(pin)) {
-    alert("Please enter a valid 4-digit PIN.");
-    return;
-  }
-
-  try {
-    const uid = auth.currentUser.uid;
-    await db.collection("users").doc(uid).update({ pin });
-    document.getElementById("setPinModal").classList.add("hidden");
-    showToast("Transaction PIN set successfully!");
-  } catch (error) {
-    console.error("Error saving PIN:", error);
-    alert("Failed to save PIN. Try again.");
-  }
-}
 
 </script>
 </body>

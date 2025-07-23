@@ -2,85 +2,155 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Airtime Receipt - Freenium Data</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
-    .receipt-card {
-      max-width: 400px;
-      margin: 2rem auto;
-      background: white;
-      border-radius: 1rem;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      padding: 2rem;
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f3f4f6;
+      margin: 0;
+      padding: 1rem;
     }
-    .receipt-card h2 {
-      font-size: 1.25rem;
-      font-weight: bold;
+    .receipt-container {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      overflow: hidden;
+      padding: 1.5rem;
+      position: relative;
+    }
+    .logo {
+      display: flex;
+      justify-content: center;
       margin-bottom: 1rem;
     }
-    .receipt-detail {
+    .logo img {
+      width: 100px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #4B5563;
+    }
+    .details {
+      margin-bottom: 1.2rem;
+    }
+    .details div {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 0.75rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px dashed #e5e7eb;
+    }
+    .details div:last-child {
+      border-bottom: none;
+    }
+    .status {
+      text-align: center;
+      margin: 1rem 0;
+    }
+    .status span {
+      background-color: #16a34a;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 9999px;
+      font-weight: bold;
+    }
+    .buttons {
+      display: flex;
+      justify-content: space-around;
+      gap: 10px;
+      margin-top: 1.5rem;
+    }
+    .buttons button {
+      flex: 1;
+      padding: 0.6rem;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 1rem;
     }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-  <div class="receipt-card">
-    <div class="text-center mb-4">
-      <img src="https://i.imgur.com/KTBvgla.png" alt="Freenium Data Logo" class="w-16 h-16 mx-auto" />
-      <h2 class="text-xl font-bold">Airtime Purchase Receipt</h2>
+<body>
+  <div class="receipt-container" id="receipt">
+    <div class="logo">
+      <img src="https://i.imgur.com/KTBvgla.png" alt="Freenium Data Logo" />
     </div>
-
-    <div id="receiptContent">
-      <div class="receipt-detail">
-        <span>Network:</span>
-        <span id="network"></span>
-      </div>
-      <div class="receipt-detail">
-        <span>Phone Number:</span>
-        <span id="phone"></span>
-      </div>
-      <div class="receipt-detail">
-        <span>Amount:</span>
-        <span id="amount"></span>
-      </div>
-      <div class="receipt-detail">
-        <span>Reference:</span>
-        <span id="reference"></span>
-      </div>
-      <div class="receipt-detail">
-        <span>Status:</span>
-        <span id="status"></span>
-      </div>
-      <div class="receipt-detail">
-        <span>Date:</span>
-        <span id="date"></span>
-      </div>
+    <h2>Airtime Purchase Receipt</h2>
+    <div class="status">
+      <span id="status">Successful</span>
     </div>
-
-    <div class="text-center mt-6">
-      <button onclick="window.print()" class="bg-green-600 text-white px-4 py-2 rounded-full">Download Receipt</button>
+    <div class="details">
+      <div><strong>Network:</strong> <span id="network">MTN</span></div>
+      <div><strong>Phone:</strong> <span id="phone">08012345678</span></div>
+      <div><strong>Amount:</strong> <span id="amount">₦500</span></div>
+      <div><strong>Reference:</strong> <span id="reference">FREENIUM123456</span></div>
+      <div><strong>Date:</strong> <span id="date">2025-07-22</span></div>
+      <div><strong>Email:</strong> <span id="email">user@example.com</span></div>
+    </div>
+    <div class="buttons">
+      <button onclick="downloadReceipt()">Download</button>
+      <button onclick="shareReceipt()">Share</button>
+    </div>
+    <div class="footer">
+      Thanks for using Freenium Data
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const network = urlParams.get("network");
-    const phone = urlParams.get("phone");
-    const amount = urlParams.get("amount");
-    const reference = urlParams.get("reference");
-    const status = urlParams.get("status") || "Pending";
-    const date = new Date().toLocaleString();
+    // Load dynamic data from localStorage
+    const receiptData = JSON.parse(localStorage.getItem("airtimeReceipt") || "{}");
+    if (receiptData) {
+      document.getElementById("network").textContent = receiptData.network || "N/A";
+      document.getElementById("phone").textContent = receiptData.phone || "N/A";
+      document.getElementById("amount").textContent = `₦${receiptData.amount || "0"}`;
+      document.getElementById("reference").textContent = receiptData.reference || "N/A";
+      document.getElementById("date").textContent = receiptData.date || new Date().toISOString().slice(0,10);
+      document.getElementById("email").textContent = receiptData.email || "N/A";
+      document.getElementById("status").textContent = receiptData.status || "Successful";
+      if (receiptData.status === "Pending") {
+        document.getElementById("status").style.backgroundColor = "#f59e0b";
+      }
+    }
 
-    document.getElementById("network").textContent = network;
-    document.getElementById("phone").textContent = phone;
-    document.getElementById("amount").textContent = `₦${amount}`;
-    document.getElementById("reference").textContent = reference;
-    document.getElementById("status").textContent = status;
-    document.getElementById("date").textContent = date;
+    function downloadReceipt() {
+      const receipt = document.getElementById("receipt");
+      html2canvas(receipt).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "airtime-receipt.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
+
+    function shareReceipt() {
+      html2canvas(document.getElementById("receipt")).then(canvas => {
+        canvas.toBlob(blob => {
+          const file = new File([blob], "airtime-receipt.png", { type: "image/png" });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({
+              title: "Airtime Receipt",
+              text: "Here is your receipt from Freenium Data",
+              files: [file],
+            }).catch(console.error);
+          } else {
+            alert("Sharing is not supported on this device.");
+          }
+        });
+      });
+    }
   </script>
 </body>
 </html>
