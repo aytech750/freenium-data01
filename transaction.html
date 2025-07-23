@@ -2,29 +2,91 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Transaction History - FREENIUM DATA</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
   <style>
-      .back-btn {
-      margin: 10px 0;
-      display: inline-block;
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #f7f7f7;
+      color: #333;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .back-btn {
       background: #4caf50;
       color: white;
-      padding: 8px 15px;
+      padding: 8px 16px;
       border-radius: 5px;
       text-decoration: none;
     }
     .back-btn:hover {
-      background: #45a049;
+      background: #388e3c;
     }
-    .transaction-page {
-      padding: 20px;
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
     }
-    .transaction-table {
-      overflow-x: auto;
+    .filters input,
+    .filters select {
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .filters button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .filters button:hover {
+      background-color: #2980b9;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    .export-buttons {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    .export-buttons button {
+      padding: 10px 16px;
+      border: none;
+      background-color: #4caf50;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .export-buttons button:hover {
+      background-color: #45a049;
     }
   </style>
 </head>
@@ -34,7 +96,7 @@
     <a href="dashboard.html" class="back-btn">&larr; Back to Dashboard</a>
   </header>
 
-  <main class="transactions-page">
+  <main>
     <section class="filters">
       <input type="text" id="searchInput" placeholder="Search transactions..." />
       <select id="filterType">
@@ -65,7 +127,7 @@
           </tr>
         </thead>
         <tbody id="transactionsBody">
-          <!-- Filled dynamically -->
+          <!-- Transactions will appear here -->
         </tbody>
       </table>
     </section>
@@ -76,7 +138,7 @@
     </div>
   </main>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase & PDF -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -111,31 +173,64 @@
         .orderBy("timestamp", "desc")
         .get();
 
-      transactions = snapshot.docs.map(doc => doc.data());
+      transactions = snapshot.docs.map(doc => {
+  const data = doc.data();
+  return {
+    id: doc.id,  // ✅ Required for receipt loading
+    ...data,
+    timestamp: parseTimestamp(data.timestamp)
+  };
+});
+
+
       displayTransactions(transactions);
+    }
+
+    function parseTimestamp(ts) {
+      if (ts?.toDate) return ts.toDate(); // Firestore Timestamp
+      if (typeof ts === "string") return new Date(ts); // ISO String
+      if (typeof ts === "number") return new Date(ts); // UNIX timestamp
+      return null;
     }
 
     function displayTransactions(list) {
       const tbody = document.getElementById("transactionsBody");
       tbody.innerHTML = "";
 
-      if (list.length === 0) {
+      if (!list.length) {
         tbody.innerHTML = `<tr><td colspan="4">No transactions found</td></tr>`;
         return;
       }
 
       list.forEach(tx => {
-        const date = tx.timestamp?.toDate().toLocaleString() || "N/A";
-        const row = `
-          <tr>
-            <td>${date}</td>
-            <td>${tx.type}</td>
-            <td>₦${parseFloat(tx.amount || 0).toFixed(2)}</td>
-            <td>${tx.status}</td>
-          </tr>
-        `;
+        const dateStr = tx.timestamp ? tx.timestamp.toLocaleString() : "N/A";
+       const row = `
+  <tr class="clickable-row" data-id="${tx.id}" data-type="${tx.type.toLowerCase()}">
+    <td>${dateStr}</td>
+    <td>${tx.type}</td>
+    <td>₦${parseFloat(tx.amount || 0).toFixed(2)}</td>
+    <td>${tx.status}</td>
+  </tr>`;
         tbody.innerHTML += row;
       });
+      setTimeout(() => {
+  document.querySelectorAll(".clickable-row").forEach(row => {
+    row.addEventListener("click", () => {
+      const id = row.getAttribute("data-id");
+      const type = row.getAttribute("data-type");
+
+      let receiptPage = "receipt.html"; // Default fallback
+      if (type.includes("airtime")) receiptPage = "airtime-receipt.html";
+      else if (type.includes("data")) receiptPage = "data-receipt.html";
+      else if (type.includes("wallet")) receiptPage = "receipt.html";
+      else if (type.includes("electricity")) receiptPage = "electricity-receipt.html";
+      else if (type.includes("tv")) receiptPage = "tv-receipt.html";
+
+      window.location.href = `${receiptPage}?id=${id}`;
+    });
+  });
+}, 100);
+
     }
 
     function applyFilters() {
@@ -145,13 +240,13 @@
       const startDate = document.getElementById("startDate").value;
       const endDate = document.getElementById("endDate").value;
 
-      let filtered = transactions.filter(tx => {
-        const date = tx.timestamp?.toDate();
-        return (!type || tx.type === type)
-          && (!status || tx.status === status)
-          && (!search || JSON.stringify(tx).toLowerCase().includes(search))
-          && (!startDate || (date && date >= new Date(startDate)))
-          && (!endDate || (date && date <= new Date(endDate)));
+      const filtered = transactions.filter(tx => {
+        const date = tx.timestamp || new Date();
+        return (!type || tx.type === type) &&
+               (!status || tx.status === status) &&
+               (!search || JSON.stringify(tx).toLowerCase().includes(search)) &&
+               (!startDate || date >= new Date(startDate)) &&
+               (!endDate || date <= new Date(endDate));
       });
 
       displayTransactions(filtered);
@@ -160,12 +255,10 @@
     function exportCSV() {
       const rows = ["Date,Type,Amount,Status"];
       transactions.forEach(tx => {
-        const date = tx.timestamp?.toDate().toLocaleString();
-        const row = `${date},${tx.type},${tx.amount},${tx.status}`;
-        rows.push(row);
+        const date = tx.timestamp ? tx.timestamp.toLocaleString() : "N/A";
+        rows.push(`${date},${tx.type},${tx.amount},${tx.status}`);
       });
-      const csv = rows.join("\n");
-      const blob = new Blob([csv], { type: 'text/csv' });
+      const blob = new Blob([rows.join("\n")], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -180,7 +273,7 @@
       doc.text("Transaction History", 10, 10);
       let y = 20;
       transactions.forEach(tx => {
-        const date = tx.timestamp?.toDate().toLocaleString();
+        const date = tx.timestamp ? tx.timestamp.toLocaleString() : "N/A";
         doc.text(`${date} | ${tx.type} | ₦${tx.amount} | ${tx.status}`, 10, y);
         y += 10;
       });

@@ -76,16 +76,16 @@
 
   const dataPlans = {
     MTN: [
-      { label: "110MB Daily Plan - 7 day (Awoof Data)", value: "100.01", price: 98 },
-      { label: "230MB Daily Plan - 7 day (Awoof Data)", value: "200.01", price: 197 },
-      { label: "500MB Daily Plan - 7 day (Awoof Data)", value: "350.01", price: 340.5 },
-      { label: "1GB Daily Plan + 1.5mins - 3 day (Awoof Data)", value: "500.01", price: 490 }
+      { label: "110MB Daily Plan - 1 day (Awoof Data)", value: "100.01", price: 98 },
+      { label: "230MB Daily Plan - 1 day (Awoof Data)", value: "200.01", price: 197 },
+      { label: "500MB Daily Plan - 2 day (Awoof Data)", value: "350.01", price: 340.5 },
+      { label: "1GB Daily Plan + 1.5mins - 1 day (Awoof Data)", value: "500.01", price: 490 }
     ],
     Glo: [
-      { label: "1GB - 7 days (SME)", value: "1000.11", price: 300 },
-      { label: "3GB - 7 days (SME)", value: "3000.11", price: 920 },
+      { label: "1GB - 3 days (SME)", value: "1000.11", price: 300 },
+      { label: "3GB - 3 days (SME)", value: "3000.11", price: 920 },
       { label: "5GB - 7 days (SME)", value: "5000.11", price: 1550 },
-      { label: "1GB - 14 days (SME)", value: "1000.12", price: 400 }
+      { label: "1GB - 7 days (SME)", value: "1000.12", price: 400 }
     ],
     Airtel: [
       { label: "1GB - 3 day (Awoof Data)", value: "499.91", price: 490 },
@@ -138,7 +138,7 @@
 
   const network = networkInput.value;
   const phone = phoneInput.value.trim();
-  const selectedOption = dataPlanSelect.options[dataPlanSelect.selectedIndex];
+ const selectedOption = dataPlanSelect.selectedIndex > -1 ? dataPlanSelect.options[dataPlanSelect.selectedIndex] : null;
   const plan = selectedOption?.value;
   const planLabel = selectedOption?.textContent;
   const amount = parseFloat(selectedOption?.getAttribute("data-price"));
@@ -209,7 +209,8 @@
       localStorage.setItem("dataReceipt", JSON.stringify(receipt));
 
       // Redirect to receipt
-      window.location.href = "data-receipt.html";
+window.location.href = `data-receipt.html?amount=${amount}&number=${phone}&network=${network}&plan=${encodeURIComponent(planLabel)}&ref=${requestId}&status=success`;
+
     } else {
       showToast("❌ Transaction failed: " + (result.message || "Unknown error"));
     }

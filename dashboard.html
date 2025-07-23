@@ -198,46 +198,86 @@ document.getElementById("userName").innerHTML = `
     }
   });
 
-  // === Load Transactions ===
-  async function loadTransactions(uid) {
-    try {
-      const snapshot = await db.collection("transactions")
-        .where("uid", "==", uid)
-        .orderBy("timestamp", "desc")
-        .limit(4)
-        .get();
+async function loadTransactions(uid) {
+  console.log("Fetching transactions for UID:", uid);
+  try {
+    const snapshot = await db.collection("transactions")
+      .where("uid", "==", uid)
+      .orderBy("timestamp", "desc")
+      .limit(4)
+      .get();
 
-      const tbody = document.getElementById("transaction-body");
-      tbody.innerHTML = "";
+    console.log("Transaction snapshot size:", snapshot.size);
 
-      if (snapshot.empty) {
-        tbody.innerHTML = "<tr><td colspan='4'>No transactions yet</td></tr>";
-      } else {
-        snapshot.forEach(doc => {
-          const tx = doc.data();
-          const date = tx.timestamp?.toDate().toLocaleString() || "N/A";
-          const type = tx.type || "N/A";
-          const amount = parseFloat(tx.amount || 0).toFixed(2);
-          const status = tx.status || "Pending";
-          const ref = tx.reference || "N/A";
+    const tbody = document.getElementById("transaction-body");
+    tbody.innerHTML = "";
 
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${date}</td>
-            <td>${type}</td>
-            <td>₦${amount}</td>
-            <td>${status}</td>
-          `;
-          row.style.cursor = "pointer";
-          row.addEventListener("click", () => showReceipt(ref, amount, status, date));
-          tbody.appendChild(row);
-        });
-      }
-    } catch (err) {
-      console.error("Failed to load transactions:", err);
-      showToast("Error loading transactions.");
-    }
+    if (snapshot.empty) {
+      console.warn("⚠️ No transactions found.");
+      tbody.innerHTML = "<tr><td colspan='4'>No transactions yet</td></tr>";
+    } else {
+      snapshot.forEach(doc => {
+        const tx = doc.data();
+        console.log("Transaction:", tx); // <-- See what you’re getting
+
+        let date = "N/A";
+if (tx.timestamp?.toDate) {
+  date = tx.timestamp.toDate().toLocaleString();
+} else if (typeof tx.timestamp === "string" || typeof tx.timestamp === "number") {
+  date = new Date(tx.timestamp).toLocaleString();
+}
+console.log("Transaction Timestamp:", tx.timestamp);
+
+        const type = tx.type || "N/A";
+        const amount = parseFloat(tx.amount || 0).toFixed(2);
+        const status = tx.status || "Pending";
+        const ref = tx.reference || "N/A";
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${date}</td>
+          <td>${type}</td>
+          <td>₦${amount}</td>
+          <td>${status}</td>
+        `;
+        row.style.cursor = "pointer";
+       row.addEventListener("click", () => {
+ const txDetails = {
+  reference: ref,
+  amount: amount,
+  status: status,
+  time: date,
+  type: type,
+  network: tx.network || "N/A",
+  phone: tx.phone || "N/A"
+};
+
+  sessionStorage.setItem("selectedTransaction", JSON.stringify(txDetails));
+  
+  // Redirect to specific receipt page
+  if (type.toLowerCase().includes("data")) {
+    window.location.href = "data-receipt.html";
+  } else if (type.toLowerCase().includes("airtime")) {
+    window.location.href = "airtime-receipt.html";
+  } else if (type.toLowerCase().includes("electricity")) {
+    window.location.href = "electricity-receipt.html";
+  } else if (type.toLowerCase().includes("tv") || type.toLowerCase().includes("gotv") || type.toLowerCase().includes("dstv")) {
+    window.location.href = "tv-receipt.html";
+  } else if (type.toLowerCase().includes("wallet")) {
+    window.location.href = "receipt.html";
+  } else {
+    window.location.href = "generic-receipt.html";
   }
+});
+
+        tbody.appendChild(row);
+      });
+    }
+  } catch (err) {
+    console.error("Failed to load transactions:", err);
+    showToast("Error loading transactions.");
+  }
+}
 
   // === Receipt Modal ===
   function showReceipt(reference, amount, status, time) {

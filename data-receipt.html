@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Data Receipt - Freenium Data</title>
+  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f3f4f6;
+      margin: 0;
+      padding: 1rem;
+    }
+    .receipt-container {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      overflow: hidden;
+      padding: 1.5rem;
+      position: relative;
+    }
+    .logo {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .logo img {
+      width: 100px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #4B5563;
+    }
+    .details {
+      margin-bottom: 1.2rem;
+    }
+    .details div {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px dashed #e5e7eb;
+    }
+    .details div:last-child {
+      border-bottom: none;
+    }
+    .status {
+      text-align: center;
+      margin: 1rem 0;
+    }
+    .status span {
+      background-color: #16a34a;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 9999px;
+      font-weight: bold;
+    }
+    .buttons {
+      display: flex;
+      justify-content: space-around;
+      gap: 10px;
+      margin-top: 1.5rem;
+    }
+    .buttons button {
+      flex: 1;
+      padding: 0.6rem;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <!-- Receipt Container -->
+  <div id="receipt" class="max-w-md mx-auto bg-white rounded-2xl shadow-md p-6 mt-10 relative">
+    <a href="dashboard.html">&lt; BACK</a>
+    <img src="https://i.imgur.com/KTBvgla.png" alt="Freenium Data Logo" class="w-20 mx-auto mb-4" />
+  
+    <h2 class="text-center text-xl font-bold mb-1">Data Purchase Receipt</h2>
+    <p class="text-center text-sm text-gray-500 mb-6">Thank you for using Freenium Data</p>
+
+    <div class="space-y-4">
+      <div class="flex justify-between">
+        <span class="text-gray-600">Network</span>
+        <span id="receipt-network" class="font-medium"></span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-600">Phone Number</span>
+        <span id="receipt-phone" class="font-medium"></span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-600">Data Plan</span>
+        <span id="receipt-plan" class="font-medium"></span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-600">Amount</span>
+        <span id="receipt-amount" class="font-medium"></span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-600">Status</span>
+        <span id="receipt-status" class="font-bold text-green-600">Success</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-600">Date</span>
+        <span id="receipt-date" class="font-medium"></span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-600">Transaction ID</span>
+        <span id="receipt-ref" class="font-medium break-words text-right"></span>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="mt-6 flex justify-center space-x-4">
+      <button onclick="downloadReceipt()" class="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700">
+        Download
+      </button>
+      <button onclick="shareReceipt()" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700">
+        Share
+      </button>
+    </div>
+  </div>
+
+  <!-- Spinner (hidden by default) -->
+  <div id="spinner" class="fixed inset-0 bg-white bg-opacity-80 flex justify-center items-center hidden z-50">
+    <img src="https://i.imgur.com/KTBvgla.png" class="w-16 animate-bounce" />
+  </div>
+
+  <!-- Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+    authDomain: "freenium-data001.firebaseapp.com",
+    projectId: "freenium-data001",
+    storageBucket: "freenium-data001.appspot.com",
+    messagingSenderId: "867380700269",
+    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  };
+
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const tx = JSON.parse(sessionStorage.getItem("selectedTransaction"));
+
+   function loadReceiptFromSession() {
+  const tx = JSON.parse(sessionStorage.getItem("selectedTransaction"));
+  if (!tx) {
+    alert("No receipt data found.");
+    window.location.href = "dashboard.html"; // fallback
+    return;
+  }
+
+  document.getElementById("spinner").classList.remove("hidden");
+
+  document.getElementById("receipt-network").textContent = tx.network || "N/A";
+  document.getElementById("receipt-phone").textContent = tx.phone || "N/A";
+  document.getElementById("receipt-plan").textContent = tx.plan || "N/A";
+  document.getElementById("receipt-amount").textContent = `₦${Number(tx.amount).toLocaleString()}`;
+  document.getElementById("receipt-status").textContent = tx.status || "Pending";
+  document.getElementById("receipt-date").textContent = tx.time || new Date().toLocaleString();
+  document.getElementById("receipt-ref").textContent = tx.reference || "N/A";
+
+  document.getElementById("spinner").classList.add("hidden");
+}
+
+    loadReceipt();
+
+    // Download as image
+    window.downloadReceipt = () => {
+      html2canvas(document.querySelector("#receipt")).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "data-receipt.png";
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
+
+    // Share API (on supported browsers)
+    window.shareReceipt = () => {
+      html2canvas(document.querySelector("#receipt")).then(canvas => {
+        canvas.toBlob(blob => {
+          const file = new File([blob], "data-receipt.png", { type: "image/png" });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({
+              files: [file],
+              title: "Data Receipt - Freenium Data",
+              text: "Here's your receipt for the recent data purchase.",
+            });
+          } else {
+            alert("Sharing not supported on this device.");
+          }
+        });
+      });
+    }
+  </script>
+</body>
+</html>

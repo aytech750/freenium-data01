@@ -84,20 +84,21 @@
 </head>
 <body>
   <div class="receipt-container" id="receipt">
+    <a href="dashboard.html">&lt; BACK</a>
     <div class="logo">
       <img src="https://i.imgur.com/KTBvgla.png" alt="Freenium Data Logo" />
     </div>
     <h2>Airtime Purchase Receipt</h2>
     <div class="status">
-      <span id="status">Successful</span>
+      <span id="status">Loading...</span>
     </div>
     <div class="details">
-      <div><strong>Network:</strong> <span id="network">MTN</span></div>
-      <div><strong>Phone:</strong> <span id="phone">08012345678</span></div>
-      <div><strong>Amount:</strong> <span id="amount">₦500</span></div>
-      <div><strong>Reference:</strong> <span id="reference">FREENIUM123456</span></div>
-      <div><strong>Date:</strong> <span id="date">2025-07-22</span></div>
-      <div><strong>Email:</strong> <span id="email">user@example.com</span></div>
+      <div><strong>Network:</strong> <span id="network">-</span></div>
+      <div><strong>Phone:</strong> <span id="phone">-</span></div>
+      <div><strong>Amount:</strong> <span id="amount">-</span></div>
+      <div><strong>Reference:</strong> <span id="reference">-</span></div>
+      <div><strong>Date:</strong> <span id="date">-</span></div>
+      <div><strong>Email:</strong> <span id="email">-</span></div>
     </div>
     <div class="buttons">
       <button onclick="downloadReceipt()">Download</button>
@@ -108,26 +109,61 @@
     </div>
   </div>
 
+  <!-- Firebase + HTML2Canvas -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   <script>
-    // Load dynamic data from localStorage
-    const receiptData = JSON.parse(localStorage.getItem("airtimeReceipt") || "{}");
-    if (receiptData) {
-      document.getElementById("network").textContent = receiptData.network || "N/A";
-      document.getElementById("phone").textContent = receiptData.phone || "N/A";
-      document.getElementById("amount").textContent = `₦${receiptData.amount || "0"}`;
-      document.getElementById("reference").textContent = receiptData.reference || "N/A";
-      document.getElementById("date").textContent = receiptData.date || new Date().toISOString().slice(0,10);
-      document.getElementById("email").textContent = receiptData.email || "N/A";
-      document.getElementById("status").textContent = receiptData.status || "Successful";
-      if (receiptData.status === "Pending") {
-        document.getElementById("status").style.backgroundColor = "#f59e0b";
-      }
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+      authDomain: "freenium-data001.firebaseapp.com",
+      projectId: "freenium-data001",
+      storageBucket: "freenium-data001.appspot.com",
+      messagingSenderId: "867380700269",
+      appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+
+    if (!id) {
+      alert("No transaction ID found.");
+    } else {
+      db.collection("transactions").doc(id).get().then(doc => {
+        if (!doc.exists) {
+          alert("No receipt data found.");
+          return;
+        }
+
+        const tx = doc.data();
+        document.getElementById("network").textContent = tx.network || "-";
+        document.getElementById("phone").textContent = tx.phone || "-";
+        document.getElementById("amount").textContent = `₦${tx.amount || "0"}`;
+        document.getElementById("reference").textContent = tx.reference || "-";
+        document.getElementById("email").textContent = tx.email || "-";
+
+        const date = tx.timestamp?.toDate ? tx.timestamp.toDate() : new Date(tx.timestamp || Date.now());
+        document.getElementById("date").textContent = date.toLocaleString();
+
+        const statusSpan = document.getElementById("status");
+        const status = tx.status || "Successful";
+        statusSpan.textContent = status;
+
+        if (status === "Pending") statusSpan.style.backgroundColor = "#f59e0b";
+        else if (status === "Failed") statusSpan.style.backgroundColor = "#dc2626";
+        else statusSpan.style.backgroundColor = "#16a34a";
+      }).catch(err => {
+        console.error("Error fetching transaction:", err);
+        alert("Error loading receipt.");
+      });
     }
 
     function downloadReceipt() {
-      const receipt = document.getElementById("receipt");
-      html2canvas(receipt).then(canvas => {
+      html2canvas(document.getElementById("receipt")).then(canvas => {
         const link = document.createElement("a");
         link.download = "airtime-receipt.png";
         link.href = canvas.toDataURL("image/png");
@@ -141,12 +177,12 @@
           const file = new File([blob], "airtime-receipt.png", { type: "image/png" });
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
             navigator.share({
-              title: "Airtime Receipt",
+              title: "Freenium Airtime Receipt",
               text: "Here is your receipt from Freenium Data",
               files: [file],
             }).catch(console.error);
           } else {
-            alert("Sharing is not supported on this device.");
+            alert("Sharing is not supported on your device.");
           }
         });
       });
