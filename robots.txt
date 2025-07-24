@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://freenium-data01.vercel.app/sitemap.xml
