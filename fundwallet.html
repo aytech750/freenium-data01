@@ -328,15 +328,6 @@
     loadingText.style.display = "none";
 
     if (result.success) {
-      await addDoc(collection(db, "transactions"), {
-        uid: currentUser.uid,
-        type: "wallet",
-        status: "success",
-        amount: amount,
-        reference: reference,
-        timestamp: new Date()
-      });
-
       // ✅ Redirect to receipt page
       window.location.href = `receipt.html?reference=${reference}`;
     } else {

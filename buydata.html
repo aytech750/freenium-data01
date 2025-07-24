@@ -186,8 +186,7 @@
         console.log("📡 API Response:", result);
 
         if (result.statuscode === "100" || result.status?.toLowerCase() === "order_received") {
-          await updateDoc(userRef, { wallet: increment(-amount) });
-
+         
           const receipt = {
             network,
             phone,
@@ -198,14 +197,6 @@
             email: user.email || "N/A",
             status: "Successful"
           };
-
-          // Save transaction
-          await addDoc(collection(db, "transactions"), {
-            ...receipt,
-            uid,
-            type: "data",
-            timestamp: serverTimestamp()
-          });
 
           // Save for receipt viewing
           sessionStorage.setItem("selectedTransaction", JSON.stringify(receipt));
