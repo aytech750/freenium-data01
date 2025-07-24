@@ -205,28 +205,30 @@
       list.forEach(tx => {
         const dateStr = tx.timestamp ? tx.timestamp.toLocaleString() : "N/A";
        const row = `
-  <tr class="clickable-row" data-id="${tx.id}" data-type="${tx.type.toLowerCase()}">
+  <tr class="clickable-row" data-id="${tx.id}" data-ref="${tx.reference}" data-type="${tx.type.toLowerCase()}">
     <td>${dateStr}</td>
     <td>${tx.type}</td>
     <td>₦${parseFloat(tx.amount || 0).toFixed(2)}</td>
     <td>${tx.status}</td>
   </tr>`;
+
         tbody.innerHTML += row;
       });
       setTimeout(() => {
   document.querySelectorAll(".clickable-row").forEach(row => {
     row.addEventListener("click", () => {
-      const id = row.getAttribute("data-id");
+    const reference = row.getAttribute("data-ref");
       const type = row.getAttribute("data-type");
 
       let receiptPage = "receipt.html"; // Default fallback
-      if (type.includes("airtime")) receiptPage = "airtime-receipt.html";
+      if (type.includes("airtime")) receiptPage = "airtime-receipt.html?id=${ref}";
       else if (type.includes("data")) receiptPage = "data-receipt.html";
-      else if (type.includes("wallet")) receiptPage = "receipt.html";
+      else if (type.includes("wallet")) receiptPage =  "receipt.html";
       else if (type.includes("electricity")) receiptPage = "electricity-receipt.html";
       else if (type.includes("tv")) receiptPage = "tv-receipt.html";
 
-      window.location.href = `${receiptPage}?id=${id}`;
+     window.location.href = `${receiptPage}?reference=${reference}`;
+
     });
   });
 }, 100);

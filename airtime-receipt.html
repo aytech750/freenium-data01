@@ -128,80 +128,56 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
-      authDomain: "freenium-data001.firebaseapp.com",
-      projectId: "freenium-data001",
-      storageBucket: "freenium-data001.appspot.com",
-      messagingSenderId: "867380700269",
-      appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
-    };
+ <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+    authDomain: "freenium-data001.firebaseapp.com",
+    projectId: "freenium-data001",
+    storageBucket: "freenium-data001.appspot.com",
+    messagingSenderId: "867380700269",
+    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+  };
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-    // Pull data from sessionStorage (used from dashboard click)
-    // Get transaction ID from URL
-const params = new URLSearchParams(window.location.search);
-const transactionId = params.get("id");
+  const params = new URLSearchParams(window.location.search);
+  const reference = params.get("id"); 
+console.log("🧾 Reference ID from URL:", reference);
 
-if (!transactionId) {
-  alert("⚠️ No transaction ID found in URL.");
-  window.location.href = "dashboard.html";
-} else {
-  db.collection("transactions").doc(transactionId).get()
-    .then(doc => {
-      if (!doc.exists) {
-        alert("❌ Transaction not found.");
-        window.location.href = "dashboard.html";
-        return;
-      }
 
-      const tx = doc.data();
+  if (!reference) {
+    alert("Invalid reference ID");
+    window.location.href = "dashboard.html";
+  }
 
-      document.getElementById("network").textContent = tx.network || "N/A";
-      document.getElementById("phone").textContent = tx.phone || "N/A";
-      document.getElementById("amount").textContent = tx.amount || "0.00";
-      document.getElementById("reference").textContent = tx.request_id || "N/A";
-      document.getElementById("statusBadge").textContent = tx.status || "Pending";
-      document.getElementById("time").textContent = tx.timestamp?.toDate?.().toLocaleString?.() || new Date().toLocaleString();
-    })
-    .catch(error => {
-      console.error("🔥 Error fetching transaction:", error);
-      alert("❌ Failed to load receipt.");
-    });
-}
+ db.collection("transactions")
+  .where("reference", "==", reference)
+  .limit(1)
+  .get()
+  .then(snapshot => {
+    console.log("📦 Firebase query result:", snapshot);
 
-    function downloadReceipt() {
-      const receiptEl = document.getElementById("receipt");
-      html2canvas(receiptEl).then(canvas => {
-        const link = document.createElement("a");
-        link.download = `airtime_receipt_${Date.now()}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-      });
+    if (snapshot.empty) {
+      alert("Transaction not found.");
+      return;
     }
 
-    function shareReceipt() {
-      const receiptEl = document.getElementById("receipt");
-      html2canvas(receiptEl).then(canvas => {
-        canvas.toBlob(blob => {
-          const file = new File([blob], "airtime receipt.png", { type: "image/png" });
+    const tx = snapshot.docs[0].data();
+    console.log("🧾 Transaction data:", tx);
+    document.getElementById("reference").textContent = tx.reference || "N/A";
+    document.getElementById("amount").textContent = parseFloat(tx.amount || 0).toFixed(2);
+    document.getElementById("statusBadge").textContent = tx.status || "Pending";
+    document.getElementById("time").textContent = tx.timestamp?.toDate?.().toLocaleString?.() || new Date().toLocaleString();
+    document.getElementById("phone").textContent = tx.phone || "N/A";
+    document.getElementById("network").textContent = tx.network || "N/A";
+  })
+  .catch(err => {
+    console.error("🔥 Error loading receipt:", err);
+    alert("Could not load receipt.");
+  });
 
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({
-              files: [file],
-              title: "Freenium Airtime Receipt",
-              text: "Here's your airtime receipt from Freenium Data."
-            }).catch(err => console.error("Sharing failed:", err));
-          } else {
-            alert("❌ Your device doesn't support sharing this receipt.");
-          }
-        });
-      });
-    }
-  </script>
+</script>
+
 </body>
 </html>
