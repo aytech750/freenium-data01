@@ -16,12 +16,13 @@
         <p>Total Rewards Earned</p>
         <h1 id="rewardAmount">₦0</h1>
         <button id="withdrawBtn" disabled>Withdraw Rewards</button>
+        <p id="referralMsg"></p> <!-- Where referral count + reward will go -->
       </div>
 
       <div class="how-to-earn">
         <h3>How to Earn Rewards</h3>
         <ul>
-         <li>Refer friends - <strong>₦50</strong> for every 2 referrals</li>
+          <li>Refer friends - <strong>₦25</strong> per referral</li>
         </ul>
       </div>
 
@@ -47,9 +48,9 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Elements
     const rewardAmount = document.getElementById("rewardAmount");
     const withdrawBtn = document.getElementById("withdrawBtn");
+    const referralMsg = document.getElementById("referralMsg");
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "index.html";
@@ -65,24 +66,14 @@
 
       const userData = userSnap.data();
       let rewards = userData.rewards || 0;
-     rewardAmount.innerText = `₦${rewards}`;
-withdrawBtn.disabled = rewards <= 0;
+      rewardAmount.innerText = `₦${rewards}`;
+      withdrawBtn.disabled = rewards <= 0;
 
-// 🔁 Show referral progress message
-const referrals = userData.referrals || [];
-const referralsNeeded = 2 - (referrals.length % 2);
-let message = "";
+      const referrals = userData.referrals || [];
+      const referralCount = referrals.length;
+      const earnedFromReferrals = referralCount * 25;
 
-if (referralsNeeded === 2) {
-  message = "Refer 2 friends to earn your next ₦50!";
-} else {
-  message = `You're just 1 referral away from earning ₦50!`;
-}
-
-const progressMsg = document.createElement("p");
-progressMsg.innerText = message;
-document.querySelector(".reward-balance").appendChild(progressMsg);
-
+      referralMsg.innerText = `You've referred ${referralCount} friend(s). You've earned ₦${earnedFromReferrals}.`;
 
       withdrawBtn.addEventListener("click", async () => {
         if (rewards <= 0) {
@@ -103,10 +94,11 @@ document.querySelector(".reward-balance").appendChild(progressMsg);
           });
 
           rewardAmount.innerText = "₦0";
-          alert("Successfully withdrawn to your wallet!");
+          withdrawBtn.innerText = "Withdraw Rewards";
+          alert("✅ Successfully withdrawn to your wallet!");
         } catch (err) {
           console.error("Withdraw error:", err);
-          alert("An error occurred. Please try again.");
+          alert("❌ An error occurred. Please try again.");
           withdrawBtn.disabled = false;
           withdrawBtn.innerText = "Withdraw Rewards";
         }

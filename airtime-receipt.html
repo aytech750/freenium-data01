@@ -3,116 +3,131 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Airtime Receipt - Freenium Data</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <title>Data Receipt - Freenium Data</title>
+  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+      background: #f8f9fa;
       margin: 0;
-      padding: 1rem;
-    }
-    .receipt-container {
-      max-width: 400px;
-      margin: auto;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      overflow: hidden;
-      padding: 1.5rem;
-      position: relative;
-    }
-    .logo {
+      padding: 20px;
       display: flex;
       justify-content: center;
-      margin-bottom: 1rem;
+      align-items: flex-start;
     }
-    .logo img {
-      width: 100px;
+
+    .receipt-container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 24px;
+      max-width: 420px;
+      width: 100%;
+      margin-top: 40px;
+      position: relative;
     }
+
+    .logo {
+      display: block;
+      margin: 0 auto 12px;
+      width: 60px;
+    }
+
     h2 {
       text-align: center;
-      margin-bottom: 1rem;
-      color: #4B5563;
+      font-size: 20px;
+      margin-bottom: 24px;
     }
-    .details {
-      margin-bottom: 1.2rem;
+
+    .receipt-details p {
+      margin: 10px 0;
+      font-size: 15px;
     }
-    .details div {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.5rem 0;
-      border-bottom: 1px dashed #e5e7eb;
+
+    .receipt-details span {
+      font-weight: 600;
     }
-    .details div:last-child {
-      border-bottom: none;
-    }
-    .status {
+
+    .status-badge {
       text-align: center;
-      margin: 1rem 0;
-    }
-    .status span {
-      background-color: #16a34a;
-      color: white;
-      padding: 5px 15px;
-      border-radius: 9999px;
+      margin: 16px 0;
+      padding: 8px 16px;
+      background: #e6ffed;
+      color: #2e7d32;
+      border-radius: 20px;
       font-weight: bold;
     }
-    .buttons {
+
+    .button-group {
       display: flex;
-      justify-content: space-around;
+      flex-direction: column;
       gap: 10px;
-      margin-top: 1.5rem;
+      margin-top: 20px;
     }
-    .buttons button {
-      flex: 1;
-      padding: 0.6rem;
-      background-color: #2563eb;
+
+    .btn {
+      background-color: #7df053;
       color: white;
+      padding: 12px;
       border: none;
-      border-radius: 10px;
-      font-size: 0.9rem;
+      border-radius: 8px;
       cursor: pointer;
+      font-size: 15px;
+      transition: background 0.3s ease;
     }
-    .footer {
+
+    .btn:hover {
+      background-color: #63f54a;
+    }
+
+    .footer-note {
       text-align: center;
-      font-size: 0.8rem;
-      color: #6b7280;
-      margin-top: 1rem;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #999;
+    }
+
+    .success-icon {
+      font-size: 40px;
+      color: green;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <div class="receipt-container" id="receipt">
-    <a href="dashboard.html">&lt; BACK</a>
-    <div class="logo">
-      <img src="https://i.imgur.com/KTBvgla.png" alt="Freenium Data Logo" />
+  <div id="receipt" class="receipt-container">
+    <img src="https://i.imgur.com/KTBvgla.png" alt="Freenium Data" class="logo" />
+    <h2>📄 Data Purchase Receipt</h2>
+    <div class="success-icon">
+      <i class="fas fa-check-circle"></i>
     </div>
-    <h2>Airtime Purchase Receipt</h2>
-    <div class="status">
-      <span id="status">Loading...</span>
+    <div class="status-badge" id="statusBadge">Successful</div>
+
+    <div class="receipt-details">
+      <p><strong>Network:</strong> <span id="network">...</span></p>
+      <p><strong>Plan:</strong> <span id="plan">...</span></p>
+      <p><strong>Phone Number:</strong> <span id="phone">...</span></p>
+      <p><strong>Amount:</strong> ₦<span id="amount">...</span></p>
+      <p><strong>Reference:</strong> <span id="reference">...</span></p>
+      <p><strong>Date:</strong> <span id="time">...</span></p>
     </div>
-    <div class="details">
-      <div><strong>Network:</strong> <span id="network">-</span></div>
-      <div><strong>Phone:</strong> <span id="phone">-</span></div>
-      <div><strong>Amount:</strong> <span id="amount">-</span></div>
-      <div><strong>Reference:</strong> <span id="reference">-</span></div>
-      <div><strong>Date:</strong> <span id="date">-</span></div>
-      <div><strong>Email:</strong> <span id="email">-</span></div>
+
+    <div class="button-group">
+      <button class="btn" onclick="downloadReceipt()">⬇️ Download Receipt</button>
+      <button class="btn" onclick="shareReceipt()">📤 Share Receipt</button>
+      <button class="btn" onclick="window.location.href='dashboard.html'">🏠 Back to Dashboard</button>
     </div>
-    <div class="buttons">
-      <button onclick="downloadReceipt()">Download</button>
-      <button onclick="shareReceipt()">Share</button>
-    </div>
-    <div class="footer">
-      Thanks for using Freenium Data
-    </div>
+
+    <div class="footer-note">Powered by Freenium Data</div>
   </div>
 
-  <!-- Firebase + HTML2Canvas -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://kit.fontawesome.com/4f3b8bcba4.js" crossorigin="anonymous"></script>
 
   <script>
     const firebaseConfig = {
@@ -125,64 +140,48 @@
     };
 
     firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
+    const tx = JSON.parse(sessionStorage.getItem("selectedTransaction") || "{}");
 
-    if (!id) {
-      alert("No transaction ID found.");
+    if (!tx.reference) {
+      alert("⚠️ No transaction found.");
+      window.location.href = "dashboard.html";
     } else {
-      db.collection("transactions").doc(id).get().then(doc => {
-        if (!doc.exists) {
-          alert("No receipt data found.");
-          return;
-        }
-
-        const tx = doc.data();
-        document.getElementById("network").textContent = tx.network || "-";
-        document.getElementById("phone").textContent = tx.phone || "-";
-        document.getElementById("amount").textContent = `₦${tx.amount || "0"}`;
-        document.getElementById("reference").textContent = tx.reference || "-";
-        document.getElementById("email").textContent = tx.email || "-";
-
-        const date = tx.timestamp?.toDate ? tx.timestamp.toDate() : new Date(tx.timestamp || Date.now());
-        document.getElementById("date").textContent = date.toLocaleString();
-
-        const statusSpan = document.getElementById("status");
-        const status = tx.status || "Successful";
-        statusSpan.textContent = status;
-
-        if (status === "Pending") statusSpan.style.backgroundColor = "#f59e0b";
-        else if (status === "Failed") statusSpan.style.backgroundColor = "#dc2626";
-        else statusSpan.style.backgroundColor = "#16a34a";
-      }).catch(err => {
-        console.error("Error fetching transaction:", err);
-        alert("Error loading receipt.");
-      });
+      document.getElementById("network").textContent = tx.network || "N/A";
+      document.getElementById("plan").textContent = tx.plan || "N/A";
+      document.getElementById("phone").textContent = tx.phone || "N/A";
+      document.getElementById("amount").textContent = tx.amount || "0.00";
+      document.getElementById("reference").textContent = tx.reference;
+      document.getElementById("statusBadge").textContent = tx.status || "Pending";
+      document.getElementById("time").textContent = tx.time || new Date().toLocaleString();
     }
 
     function downloadReceipt() {
-      html2canvas(document.getElementById("receipt")).then(canvas => {
+      const receiptEl = document.getElementById("receipt");
+      html2canvas(receiptEl).then(canvas => {
         const link = document.createElement("a");
-        link.download = "airtime-receipt.png";
-        link.href = canvas.toDataURL("image/png");
+        link.download = `data_receipt_${Date.now()}.png`;
+        link.href = canvas.toDataURL();
         link.click();
       });
     }
 
     function shareReceipt() {
-      html2canvas(document.getElementById("receipt")).then(canvas => {
+      const receiptEl = document.getElementById("receipt");
+      html2canvas(receiptEl).then(canvas => {
         canvas.toBlob(blob => {
-          const file = new File([blob], "airtime-receipt.png", { type: "image/png" });
+          const file = new File([blob], "data receipt.png", { type: "image/png" });
+
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
             navigator.share({
-              title: "Freenium Airtime Receipt",
-              text: "Here is your receipt from Freenium Data",
               files: [file],
-            }).catch(console.error);
+              title: "Freenium Data Receipt",
+              text: "Here's your data receipt from Freenium Data."
+            }).catch(err => console.error("Sharing failed:", err));
           } else {
-            alert("Sharing is not supported on your device.");
+            alert("❌ Your device doesn't support sharing this receipt.");
           }
         });
       });

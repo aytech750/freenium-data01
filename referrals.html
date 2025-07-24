@@ -102,12 +102,10 @@
         // 👇 Now using UID directly as the referral code
         referralInput.value = uid;
        referralStats.innerText = referrals.length;
+const rewardAmount = referrals.length * 25;
+const nextTarget = 25 * (referrals.length + 1);
+const progressText = `Earn ₦25 per referral! Next target: ₦${nextTarget}`;
 
-const rewardAmount = Math.floor(referrals.length / 2) * 50;
-const remainingToNext = 2 - (referrals.length % 2);
-const progressText = remainingToNext === 2
-  ? "You need 2 referrals to earn ₦50."
-  : `Only ${remainingToNext} more referral${remainingToNext === 1 ? '' : 's'} to earn ₦50!`;
 
 document.getElementById("referralReward").innerText = rewardAmount;
 document.getElementById("referralProgress").innerText = progressText;

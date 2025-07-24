@@ -159,7 +159,7 @@ document.getElementById("buyBtn").addEventListener("click", async (e) => {
     });
 
     const result = await response.json();
-    console.log("📡 API Response:", result);
+    console.log("📱 API Response:", result);
 
     if (result.statuscode === "100" || result.status?.toLowerCase() === "order_received") {
       await updateDoc(userRef, { wallet: increment(-amount) });
@@ -175,20 +175,11 @@ document.getElementById("buyBtn").addEventListener("click", async (e) => {
         timestamp: new Date().toISOString()
       };
 
-      await addDoc(collection(db, "transactions"), receiptData);
+      const receiptDoc = await addDoc(collection(db, "transactions"), receiptData);
 
-      sessionStorage.setItem("airtime_receipt", JSON.stringify(receiptData));
-     localStorage.setItem("airtimeReceipt", JSON.stringify({
-  network: selectedNetwork.toUpperCase(),
-  phone: phone,
-  amount: amount,
-  reference: requestId,
-  date: new Date().toISOString().slice(0,10),
-  email: user.email || "Not Provided",
-  status: "Successful"
-}));
+      sessionStorage.setItem("airtime_receipt_id", receiptDoc.id);
 
-      window.location.href = "airtime-receipt.html";
+      window.location.href = `airtime-receipt.html?id=${receiptDoc.id}`;
     } else {
       showToast("❌ Failed: " + (result.Message || "Unknown error"));
     }

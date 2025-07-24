@@ -264,11 +264,13 @@ console.log("Transaction Timestamp:", tx.timestamp);
   } else if (type.toLowerCase().includes("tv") || type.toLowerCase().includes("gotv") || type.toLowerCase().includes("dstv")) {
     window.location.href = "tv-receipt.html";
   } else if (type.toLowerCase().includes("wallet")) {
-    window.location.href = "receipt.html";
+
+    window.location.href = `receipt.html?reference=${tx.reference}`;
   } else {
     window.location.href = "generic-receipt.html";
   }
-});
+})
+
 
         tbody.appendChild(row);
       });

@@ -4,147 +4,147 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Data Receipt - Freenium Data</title>
-  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" />
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f3f4f6;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f2f2f2;
       margin: 0;
-      padding: 1rem;
+      padding: 20px;
     }
+
     .receipt-container {
-      max-width: 400px;
+      max-width: 500px;
       margin: auto;
       background: white;
-      border-radius: 20px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      overflow: hidden;
-      padding: 1.5rem;
-      position: relative;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    .logo {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 1rem;
-    }
-    .logo img {
-      width: 100px;
-    }
-    h2 {
+
+    .success-icon {
+      font-size: 40px;
+      color: green;
       text-align: center;
-      margin-bottom: 1rem;
-      color: #4B5563;
     }
-    .details {
-      margin-bottom: 1.2rem;
+
+    .title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 20px;
+      margin-top: 10px;
     }
-    .details div {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.5rem 0;
-      border-bottom: 1px dashed #e5e7eb;
-    }
-    .details div:last-child {
-      border-bottom: none;
-    }
+
     .status {
       text-align: center;
-      margin: 1rem 0;
-    }
-    .status span {
-      background-color: #16a34a;
-      color: white;
-      padding: 5px 15px;
-      border-radius: 9999px;
+      color: green;
+      margin-bottom: 20px;
       font-weight: bold;
     }
-    .buttons {
+
+    .info-group {
       display: flex;
-      justify-content: space-around;
-      gap: 10px;
-      margin-top: 1.5rem;
+      justify-content: space-between;
+      margin: 10px 0;
     }
-    .buttons button {
+
+    .label {
+      font-weight: 500;
+      color: #444;
+    }
+
+    .value {
+      font-weight: 600;
+      color: #000;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+
+    .actions button {
       flex: 1;
-      padding: 0.6rem;
-      background-color: #2563eb;
-      color: white;
+      margin: 0 5px;
+      padding: 10px;
       border: none;
-      border-radius: 10px;
-      font-size: 0.9rem;
+      border-radius: 6px;
       cursor: pointer;
+      font-weight: bold;
     }
-    .footer {
-      text-align: center;
-      font-size: 0.8rem;
-      color: #6b7280;
-      margin-top: 1rem;
+
+    .download-btn {
+      background: #007bff;
+      color: white;
+    }
+
+    .back-btn {
+      background: #f0f0f0;
+      color: #333;
     }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body>
 
-  <!-- Receipt Container -->
-  <div id="receipt" class="max-w-md mx-auto bg-white rounded-2xl shadow-md p-6 mt-10 relative">
-    <a href="dashboard.html">&lt; BACK</a>
-    <img src="https://i.imgur.com/KTBvgla.png" alt="Freenium Data Logo" class="w-20 mx-auto mb-4" />
-  
-    <h2 class="text-center text-xl font-bold mb-1">Data Purchase Receipt</h2>
-    <p class="text-center text-sm text-gray-500 mb-6">Thank you for using Freenium Data</p>
+  <div class="receipt-container" id="receipt">
+    <div class="success-icon">
+      <i class="fas fa-check-circle"></i>
+    </div>
+    <div class="title">Data Purchase Successful</div>
+    <div class="status" id="status">Completed</div>
 
-    <div class="space-y-4">
-      <div class="flex justify-between">
-        <span class="text-gray-600">Network</span>
-        <span id="receipt-network" class="font-medium"></span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-gray-600">Phone Number</span>
-        <span id="receipt-phone" class="font-medium"></span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-gray-600">Data Plan</span>
-        <span id="receipt-plan" class="font-medium"></span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-gray-600">Amount</span>
-        <span id="receipt-amount" class="font-medium"></span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-gray-600">Status</span>
-        <span id="receipt-status" class="font-bold text-green-600">Success</span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-gray-600">Date</span>
-        <span id="receipt-date" class="font-medium"></span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-gray-600">Transaction ID</span>
-        <span id="receipt-ref" class="font-medium break-words text-right"></span>
-      </div>
+    <div class="info-group">
+      <div class="label">Amount</div>
+      <div class="value" id="amount">₦0</div>
     </div>
 
-    <!-- Buttons -->
-    <div class="mt-6 flex justify-center space-x-4">
-      <button onclick="downloadReceipt()" class="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700">
-        Download
-      </button>
-      <button onclick="shareReceipt()" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700">
-        Share
-      </button>
+    <div class="info-group">
+      <div class="label">Network</div>
+      <div class="value" id="network">-</div>
+    </div>
+
+    <div class="info-group">
+      <div class="label">Plan</div>
+      <div class="value" id="plan">-</div>
+    </div>
+
+    <div class="info-group">
+      <div class="label">Phone</div>
+      <div class="value" id="phone">-</div>
+    </div>
+
+    <div class="info-group">
+      <div class="label">Reference</div>
+      <div class="value" id="reference">-</div>
+    </div>
+
+    <div class="info-group">
+      <div class="label">Date</div>
+      <div class="value" id="date">-</div>
+    </div>
+
+    <div class="info-group">
+      <div class="label">User</div>
+      <div class="value" id="email">-</div>
+    </div>
+
+    <div class="actions">
+      <button class="download-btn" onclick="downloadReceipt()">Download</button>
+      <button class="back-btn" onclick="window.history.back()">Back</button>
     </div>
   </div>
 
-  <!-- Spinner (hidden by default) -->
-  <div id="spinner" class="fixed inset-0 bg-white bg-opacity-80 flex justify-center items-center hidden z-50">
-    <img src="https://i.imgur.com/KTBvgla.png" class="w-16 animate-bounce" />
-  </div>
-
-  <!-- Script -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+     <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
@@ -154,63 +154,54 @@
     messagingSenderId: "867380700269",
     appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
   };
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const txId = urlParams.get("id");
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    if (!txId) {
+      alert("No transaction ID found.");
+    }
 
-    const tx = JSON.parse(sessionStorage.getItem("selectedTransaction"));
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) return alert("You're not logged in");
 
-   function loadReceiptFromSession() {
-  const tx = JSON.parse(sessionStorage.getItem("selectedTransaction"));
-  if (!tx) {
-    alert("No receipt data found.");
-    window.location.href = "dashboard.html"; // fallback
-    return;
-  }
+      try {
+        const doc = await db.collection("transactions").doc(txId).get();
+        if (!doc.exists) {
+          alert("Transaction not found.");
+          return;
+        }
 
-  document.getElementById("spinner").classList.remove("hidden");
+        const tx = doc.data();
 
-  document.getElementById("receipt-network").textContent = tx.network || "N/A";
-  document.getElementById("receipt-phone").textContent = tx.phone || "N/A";
-  document.getElementById("receipt-plan").textContent = tx.plan || "N/A";
-  document.getElementById("receipt-amount").textContent = `₦${Number(tx.amount).toLocaleString()}`;
-  document.getElementById("receipt-status").textContent = tx.status || "Pending";
-  document.getElementById("receipt-date").textContent = tx.time || new Date().toLocaleString();
-  document.getElementById("receipt-ref").textContent = tx.reference || "N/A";
+        document.getElementById("amount").textContent = `₦${tx.amount}`;
+        document.getElementById("network").textContent = tx.network || "-";
+        document.getElementById("plan").textContent = tx.plan || "-";
+        document.getElementById("phone").textContent = tx.phone || "-";
+        document.getElementById("reference").textContent = tx.requestId || tx.reference || "-";
+        document.getElementById("email").textContent = user.email || "-";
+        document.getElementById("date").textContent = tx.timestamp?.toDate().toLocaleString() || "-";
+        document.getElementById("status").textContent = tx.status === "success" ? "Completed" : tx.status || "Pending";
 
-  document.getElementById("spinner").classList.add("hidden");
-}
+      } catch (err) {
+        console.error("Error loading receipt:", err);
+        alert("Something went wrong loading receipt.");
+      }
+    });
 
-    loadReceipt();
-
-    // Download as image
-    window.downloadReceipt = () => {
-      html2canvas(document.querySelector("#receipt")).then(canvas => {
+    function downloadReceipt() {
+      const receipt = document.getElementById("receipt");
+      html2canvas(receipt).then(canvas => {
         const link = document.createElement("a");
         link.download = "data-receipt.png";
         link.href = canvas.toDataURL();
         link.click();
       });
     }
-
-    // Share API (on supported browsers)
-    window.shareReceipt = () => {
-      html2canvas(document.querySelector("#receipt")).then(canvas => {
-        canvas.toBlob(blob => {
-          const file = new File([blob], "data-receipt.png", { type: "image/png" });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({
-              files: [file],
-              title: "Data Receipt - Freenium Data",
-              text: "Here's your receipt for the recent data purchase.",
-            });
-          } else {
-            alert("Sharing not supported on this device.");
-          }
-        });
-      });
-    }
   </script>
+
 </body>
 </html>

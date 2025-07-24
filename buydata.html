@@ -2,227 +2,220 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Buy Data - FREENIUM DATA</title>
   <link rel="stylesheet" href="data.css" />
   <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
 </head>
 <body>
   <div id="globalSpinner" class="hidden">
-  <img src="https://i.imgur.com/KTBvgla.png" alt="Loading..." />
-</div>
-
-<section class="buy-data-section">
-  <div class="data-container">
-    <H1>Freenium Data</H1>
-    <h2>Buy Data</h2>
-    <h3>Select Network</h3>
-
-    <div class="network" onclick="selectedNetwork(this)">
-      <img src="https://i.imgur.com/nqB32k8.png" alt="MTN" data-network="MTN" />
-    </div>
-    <div class="network" onclick="selectedNetwork(this)">
-      <img src="https://i.imgur.com/FXvtyZZ.png" alt="Airtel" data-network="Airtel" />
-    </div>
-    <div class="network" onclick="selectedNetwork(this)">
-      <img src="https://i.imgur.com/mgjfAJr.jpeg" alt="Glo" data-network="Glo" />
-    </div>
-    <div class="network" onclick="selectedNetwork(this)">
-      <img src="https://i.imgur.com/XKy0ckO.jpeg" alt="9mobile" data-network="etisalat" />
-    </div>
-
-    <input type="hidden" id="selectedNetwork">
+    <img src="https://i.imgur.com/KTBvgla.png" alt="Loading..." />
   </div>
 
-  <form id="data-form">
-    <input type="tel" id="phone" placeholder="Enter Phone Number" required />
-    <label for="dataPlan">Select Data Plan</label>
-    <select id="dataPlan" required>
-      <option value="" disabled selected>Select a network first</option>
-    </select>
-    <button id="buyBtn" type="submit">Buy Now</button>
-    <a href="dashboard.html" class="back-arrow">&lt; PREVIOUS</a>
-  </form>
+  <section class="buy-data-section">
+    <div class="data-container">
+      <h1>Freenium Data</h1>
+      <h2>Buy Data</h2>
+      <h3>Select Network</h3>
 
+      <div class="network" onclick="selectedNetwork(this)">
+        <img src="https://i.imgur.com/nqB32k8.png" alt="MTN" data-network="MTN" />
+      </div>
+      <div class="network" onclick="selectedNetwork(this)">
+        <img src="https://i.imgur.com/FXvtyZZ.png" alt="Airtel" data-network="Airtel" />
+      </div>
+      <div class="network" onclick="selectedNetwork(this)">
+        <img src="https://i.imgur.com/mgjfAJr.jpeg" alt="Glo" data-network="Glo" />
+      </div>
+      <div class="network" onclick="selectedNetwork(this)">
+        <img src="https://i.imgur.com/XKy0ckO.jpeg" alt="9mobile" data-network="etisalat" />
+      </div>
 
-  <div id="toast" class="toast">Transaction Successful</div>
-</section>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-  import { updateDoc, doc, getDoc, increment } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+      <input type="hidden" id="selectedNetwork">
+    </div>
 
+    <form id="data-form">
+      <input type="tel" id="phone" placeholder="Enter Phone Number" required />
+      <label for="dataPlan">Select Data Plan</label>
+      <select id="dataPlan" required>
+        <option value="" disabled selected>Select a network first</option>
+      </select>
+      <button id="buyBtn" type="submit">Buy Now</button>
+      <a href="dashboard.html" class="back-arrow">&lt; PREVIOUS</a>
+    </form>
 
+    <div id="toast" class="toast">Transaction Successful</div>
+  </section>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
-    authDomain: "freenium-data001.firebaseapp.com",
-    projectId: "freenium-data001",
-    storageBucket: "freenium-data001.appspot.com",
-    messagingSenderId: "867380700269",
-    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
-  };
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  
-  const phoneInput = document.getElementById("phone");
-  const networkInput = document.getElementById("selectedNetwork");
-  const dataPlanSelect = document.getElementById("dataPlan");
-  const buyBtn = document.getElementById("buyBtn");
-  const toast = document.getElementById("toast");
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+      authDomain: "freenium-data001.firebaseapp.com",
+      projectId: "freenium-data001",
+      storageBucket: "freenium-data001.appspot.com",
+      messagingSenderId: "867380700269",
+      appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+    };
 
-  const dataPlans = {
-    MTN: [
-      { label: "110MB Daily Plan - 1 day (Awoof Data)", value: "100.01", price: 98 },
-      { label: "230MB Daily Plan - 1 day (Awoof Data)", value: "200.01", price: 197 },
-      { label: "500MB Daily Plan - 2 day (Awoof Data)", value: "350.01", price: 340.5 },
-      { label: "1GB Daily Plan + 1.5mins - 1 day (Awoof Data)", value: "500.01", price: 490 }
-    ],
-    Glo: [
-      { label: "1GB - 3 days (SME)", value: "1000.11", price: 300 },
-      { label: "3GB - 3 days (SME)", value: "3000.11", price: 920 },
-      { label: "5GB - 7 days (SME)", value: "5000.11", price: 1550 },
-      { label: "1GB - 7 days (SME)", value: "1000.12", price: 400 }
-    ],
-    Airtel: [
-      { label: "1GB - 3 day (Awoof Data)", value: "499.91", price: 490 },
-      { label: "1.5GB - 7 days (Awoof Data)", value: "599.91", price: 587.7 },
-      { label: "2GB - 7 days (Awoof Data)", value: "749.91", price: 735 }
-    ],
-    etisalat: [
-      { label: "100MB - 3 day (Awoof Data)", value: "100.01", price: 96 },
-      { label: "180MB - 3 day (Awoof Data)", value: "150.01", price: 140.5 },
-      { label: "250MB - 3 day (Awoof Data)", value: "200.01", price: 190 }
-    ]
-  };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-  window.selectedNetwork = function(divElement) {
-    document.querySelectorAll(".network").forEach(net => net.classList.remove("selected"));
-    divElement.classList.add("selected");
+    const phoneInput = document.getElementById("phone");
+    const networkInput = document.getElementById("selectedNetwork");
+    const dataPlanSelect = document.getElementById("dataPlan");
+    const buyBtn = document.getElementById("buyBtn");
+    const toast = document.getElementById("toast");
 
-    const selected = divElement.querySelector("img").getAttribute("data-network");
-    networkInput.value = selected;
-    populateDataPlans(selected);
-  };
+    const dataPlans = {
+      MTN: [
+        { label: "110MB Daily Plan", value: "100.01", price: 98 },
+        { label: "230MB Daily Plan", value: "200.01", price: 197 },
+        { label: "500MB Daily Plan", value: "350.01", price: 340.5 },
+        { label: "1GB Daily Plan", value: "500.01", price: 490 }
+      ],
+      Glo: [
+        { label: "1GB - 3 days", value: "1000.11", price: 300 },
+        { label: "3GB - 3 days", value: "3000.11", price: 920 },
+        { label: "5GB - 7 days", value: "5000.11", price: 1550 }
+      ],
+      Airtel: [
+        { label: "1GB - 3 day", value: "499.91", price: 490 },
+        { label: "1.5GB - 7 days", value: "599.91", price: 587.7 },
+        { label: "2GB - 7 days", value: "749.91", price: 735 }
+      ],
+      etisalat: [
+        { label: "100MB - 3 day", value: "100.01", price: 96 },
+        { label: "180MB - 3 day", value: "150.01", price: 140.5 },
+        { label: "250MB - 3 day", value: "200.01", price: 190 }
+      ]
+    };
 
-  function populateDataPlans(network) {
-    dataPlanSelect.innerHTML = "";
-    if (dataPlans[network]) {
-      dataPlans[network].forEach(plan => {
+    window.selectedNetwork = function(divElement) {
+      document.querySelectorAll(".network").forEach(net => net.classList.remove("selected"));
+      divElement.classList.add("selected");
+
+      const selected = divElement.querySelector("img").getAttribute("data-network");
+      networkInput.value = selected;
+      populateDataPlans(selected);
+    };
+
+    function populateDataPlans(network) {
+      dataPlanSelect.innerHTML = "";
+      if (dataPlans[network]) {
+        dataPlans[network].forEach(plan => {
+          const option = document.createElement("option");
+          option.value = plan.value;
+          option.textContent = `${plan.label} - ₦${plan.price}`;
+          option.setAttribute("data-price", plan.price);
+          dataPlanSelect.appendChild(option);
+        });
+      } else {
         const option = document.createElement("option");
-        option.value = plan.value;
-        option.textContent = `${plan.label} - ₦${plan.price}`;
-        option.setAttribute("data-price", plan.price);
+        option.textContent = "Select a network first";
+        option.disabled = true;
+        option.selected = true;
         dataPlanSelect.appendChild(option);
-      });
-    } else {
-      const option = document.createElement("option");
-      option.textContent = "Select a network first";
-      option.disabled = true;
-      option.selected = true;
-      dataPlanSelect.appendChild(option);
-    }
-  }
-
-  function showToast(message) {
-    toast.textContent = message;
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 3000);
-  }
-
- buyBtn.addEventListener("click", async (e) => {
-  e.preventDefault();
-
-  const network = networkInput.value;
-  const phone = phoneInput.value.trim();
- const selectedOption = dataPlanSelect.selectedIndex > -1 ? dataPlanSelect.options[dataPlanSelect.selectedIndex] : null;
-  const plan = selectedOption?.value;
-  const planLabel = selectedOption?.textContent;
-  const amount = parseFloat(selectedOption?.getAttribute("data-price"));
-
-  if (!network || !phone || !plan || isNaN(amount)) {
-    showToast("⚠️ Please fill in all fields correctly.");
-    return;
-  }
-
-  const user = auth.currentUser;
-  if (!user) {
-    alert("🔐 Please log in first.");
-    return;
-  }
-
-  const uid = user.uid;
-  const userRef = doc(db, "users", uid);
-  const requestId = `data_${uid}_${Date.now()}`;
-
-  try {
-    const userSnap = await getDoc(userRef);
-    const wallet = userSnap.data()?.wallet || 0;
-
-    if (wallet < amount) {
-      alert("❌ Insufficient wallet balance.");
-      return;
+      }
     }
 
-    document.getElementById("globalSpinner").classList.remove("hidden");
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
 
-    const response = await fetch("https://freenium-data01.vercel.app/api/data", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        MobileNetwork: network,
-        MobileNumber: phone,
-        DataPlan: plan,
-        request_id: requestId
-      })
+    buyBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+
+      const network = networkInput.value;
+      const phone = phoneInput.value.trim();
+      const selectedOption = dataPlanSelect.options[dataPlanSelect.selectedIndex];
+      const plan = selectedOption?.value;
+      const planLabel = selectedOption?.textContent;
+      const amount = parseFloat(selectedOption?.getAttribute("data-price"));
+
+      if (!network || !phone || !plan || isNaN(amount)) {
+        showToast("⚠️ Please fill in all fields correctly.");
+        return;
+      }
+
+      const user = auth.currentUser;
+      if (!user) {
+        alert("🔐 Please log in first.");
+        return;
+      }
+
+      const uid = user.uid;
+      const userRef = doc(db, "users", uid);
+      const requestId = `data_${uid}_${Date.now()}`;
+
+      try {
+        const userSnap = await getDoc(userRef);
+        const wallet = userSnap.data()?.wallet || 0;
+
+        if (wallet < amount) {
+          alert("❌ Insufficient wallet balance.");
+          return;
+        }
+
+        document.getElementById("globalSpinner").classList.remove("hidden");
+
+        const response = await fetch("https://freenium-data01.vercel.app/api/buy-data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            MobileNetwork: network,
+            MobileNumber: phone,
+            DataPlan: plan,
+            request_id: requestId
+          })
+        });
+
+        const result = await response.json();
+        console.log("📡 API Response:", result);
+
+        if (result.statuscode === "100" || result.status?.toLowerCase() === "order_received") {
+          await updateDoc(userRef, { wallet: increment(-amount) });
+
+          const receipt = {
+            network,
+            phone,
+            plan: planLabel,
+            amount,
+            reference: requestId,
+            date: new Date().toLocaleString(),
+            email: user.email || "N/A",
+            status: "Successful"
+          };
+
+          // Save transaction
+          await addDoc(collection(db, "transactions"), {
+            ...receipt,
+            uid,
+            type: "data",
+            timestamp: serverTimestamp()
+          });
+
+          // Save for receipt viewing
+          sessionStorage.setItem("selectedTransaction", JSON.stringify(receipt));
+
+          // Redirect
+          window.location.href = "data-receipt.html";
+        } else {
+          showToast("❌ Transaction failed: " + (result.message || "Unknown error"));
+        }
+      } catch (err) {
+        console.error("🔥 Error:", err);
+        showToast("❌ Something went wrong. Try again.");
+      } finally {
+        document.getElementById("globalSpinner").classList.add("hidden");
+      }
     });
-
-    const result = await response.json();
-    console.log("📡 API Response:", result);
-
-    if (result.statuscode === "100" || result.status?.toLowerCase() === "order_received") {
-      await updateDoc(userRef, { wallet: increment(-amount) });
-
-      const receipt = {
-        network,
-        phone,
-        plan: planLabel,
-        amount,
-        reference: requestId,
-        date: new Date().toISOString().slice(0, 10),
-        email: user.email || "N/A",
-        status: "Successful"
-      };
-
-      // Save to Firestore
-      await addDoc(collection(db, "transactions"), {
-        ...receipt,
-        uid,
-        type: "data",
-        timestamp: serverTimestamp()
-      });
-
-      // Save to localStorage
-      localStorage.setItem("dataReceipt", JSON.stringify(receipt));
-
-      // Redirect to receipt
-window.location.href = `data-receipt.html?amount=${amount}&number=${phone}&network=${network}&plan=${encodeURIComponent(planLabel)}&ref=${requestId}&status=success`;
-
-    } else {
-      showToast("❌ Transaction failed: " + (result.message || "Unknown error"));
-    }
-  } catch (err) {
-    console.error("🔥 Error:", err);
-    showToast("❌ Something went wrong. Try again.");
-  } finally {
-    document.getElementById("globalSpinner").classList.add("hidden");
-  }
-});
-
-</script>
-
+  </script>
 </body>
 </html>
