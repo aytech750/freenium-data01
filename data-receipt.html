@@ -4,28 +4,89 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Data Receipt - Freenium Data</title>
-  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-  <script src="firebase-config.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f2f2f2;
+      font-family: 'Inter', sans-serif;
+      background: #f8f9fa;
       margin: 0;
       padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
     }
 
     .receipt-container {
-      max-width: 500px;
-      margin: auto;
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 24px;
+      max-width: 420px;
+      width: 100%;
+      margin-top: 40px;
+      position: relative;
+    }
+
+    .logo {
+      display: block;
+      margin: 0 auto 12px;
+      width: 60px;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 24px;
+    }
+
+    .receipt-details p {
+      margin: 10px 0;
+      font-size: 15px;
+    }
+
+    .receipt-details span {
+      font-weight: 600;
+    }
+
+    .status-badge {
+      text-align: center;
+      margin: 16px 0;
+      padding: 8px 16px;
+      background: #e6ffed;
+      color: #2e7d32;
+      border-radius: 20px;
+      font-weight: bold;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      background-color: #7df053;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.3s ease;
+    }
+
+    .btn:hover {
+      background-color: #63f54a;
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #999;
     }
 
     .success-icon {
@@ -33,175 +94,98 @@
       color: green;
       text-align: center;
     }
-
-    .title {
-      text-align: center;
-      font-weight: bold;
-      font-size: 20px;
-      margin-top: 10px;
-    }
-
-    .status {
-      text-align: center;
-      color: green;
-      margin-bottom: 20px;
-      font-weight: bold;
-    }
-
-    .info-group {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-    }
-
-    .label {
-      font-weight: 500;
-      color: #444;
-    }
-
-    .value {
-      font-weight: 600;
-      color: #000;
-    }
-
-    .actions {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 30px;
-    }
-
-    .actions button {
-      flex: 1;
-      margin: 0 5px;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .download-btn {
-      background: #007bff;
-      color: white;
-    }
-
-    .back-btn {
-      background: #f0f0f0;
-      color: #333;
-    }
   </style>
 </head>
 <body>
-
-  <div class="receipt-container" id="receipt">
+  <div id="receipt" class="receipt-container">
+    <img src="https://i.imgur.com/KTBvgla.png" alt="Freenium Data" class="logo" />
+    <h2>📄 Data Purchase Receipt</h2>
     <div class="success-icon">
       <i class="fas fa-check-circle"></i>
     </div>
-    <div class="title">Data Purchase Successful</div>
-    <div class="status" id="status">Completed</div>
+    <div class="status-badge" id="statusBadge">Successful</div>
 
-    <div class="info-group">
-      <div class="label">Amount</div>
-      <div class="value" id="amount">₦0</div>
+    <div class="receipt-details">
+      <p><strong>Network:</strong> <span id="network">...</span></p>
+      <p><strong>Plan:</strong> <span id="plan">...</span></p>
+      <p><strong>Phone Number:</strong> <span id="phone">...</span></p>
+      <p><strong>Amount:</strong> ₦<span id="amount">...</span></p>
+      <p><strong>Reference:</strong> <span id="reference">...</span></p>
+      <p><strong>Date:</strong> <span id="time">...</span></p>
     </div>
 
-    <div class="info-group">
-      <div class="label">Network</div>
-      <div class="value" id="network">-</div>
+    <div class="button-group">
+      <button class="btn" onclick="downloadReceipt()">⬇️ Download Receipt</button>
+      <button class="btn" onclick="shareReceipt()">📤 Share Receipt</button>
+      <button class="btn" onclick="window.location.href='dashboard.html'">🏠 Back to Dashboard</button>
     </div>
 
-    <div class="info-group">
-      <div class="label">Plan</div>
-      <div class="value" id="plan">-</div>
-    </div>
-
-    <div class="info-group">
-      <div class="label">Phone</div>
-      <div class="value" id="phone">-</div>
-    </div>
-
-    <div class="info-group">
-      <div class="label">Reference</div>
-      <div class="value" id="reference">-</div>
-    </div>
-
-    <div class="info-group">
-      <div class="label">Date</div>
-      <div class="value" id="date">-</div>
-    </div>
-
-    <div class="info-group">
-      <div class="label">User</div>
-      <div class="value" id="email">-</div>
-    </div>
-
-    <div class="actions">
-      <button class="download-btn" onclick="downloadReceipt()">Download</button>
-      <button class="back-btn" onclick="window.history.back()">Back</button>
-    </div>
+    <div class="footer-note">Powered by Freenium Data</div>
   </div>
 
-     <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://kit.fontawesome.com/4f3b8bcba4.js" crossorigin="anonymous"></script>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
-    authDomain: "freenium-data001.firebaseapp.com",
-    projectId: "freenium-data001",
-    storageBucket: "freenium-data001.appspot.com",
-    messagingSenderId: "867380700269",
-    appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
-  };
-    const app = firebase.initializeApp(firebaseConfig);
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLyAoL10FFU76h19FX-20wBliMssMlgmE",
+      authDomain: "freenium-data001.firebaseapp.com",
+      projectId: "freenium-data001",
+      storageBucket: "freenium-data001.appspot.com",
+      messagingSenderId: "867380700269",
+      appId: "1:867380700269:web:a5dc407b51dcf7acdf4b64"
+    };
+
+    firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const txId = urlParams.get("id");
+    const tx = JSON.parse(sessionStorage.getItem("selectedTransaction") || "{}");
 
-    if (!txId) {
-      alert("No transaction ID found.");
+    if (!tx.reference) {
+      alert("⚠️ No transaction found.");
+      window.location.href = "dashboard.html";
+    } else {
+      document.getElementById("network").textContent = tx.network || "N/A";
+      document.getElementById("plan").textContent = tx.plan || "N/A";
+      document.getElementById("phone").textContent = tx.phone || "N/A";
+      document.getElementById("amount").textContent = tx.amount || "0.00";
+      document.getElementById("reference").textContent = tx.reference;
+      document.getElementById("statusBadge").textContent = tx.status || "Pending";
+      document.getElementById("time").textContent = tx.time || new Date().toLocaleString();
     }
 
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) return alert("You're not logged in");
-
-      try {
-        const doc = await db.collection("transactions").doc(txId).get();
-        if (!doc.exists) {
-          alert("Transaction not found.");
-          return;
-        }
-
-        const tx = doc.data();
-
-        document.getElementById("amount").textContent = `₦${tx.amount}`;
-        document.getElementById("network").textContent = tx.network || "-";
-        document.getElementById("plan").textContent = tx.plan || "-";
-        document.getElementById("phone").textContent = tx.phone || "-";
-        document.getElementById("reference").textContent = tx.requestId || tx.reference || "-";
-        document.getElementById("email").textContent = user.email || "-";
-        document.getElementById("date").textContent = tx.timestamp?.toDate().toLocaleString() || "-";
-        document.getElementById("status").textContent = tx.status === "success" ? "Completed" : tx.status || "Pending";
-
-      } catch (err) {
-        console.error("Error loading receipt:", err);
-        alert("Something went wrong loading receipt.");
-      }
-    });
-
     function downloadReceipt() {
-      const receipt = document.getElementById("receipt");
-      html2canvas(receipt).then(canvas => {
+      const receiptEl = document.getElementById("receipt");
+      html2canvas(receiptEl).then(canvas => {
         const link = document.createElement("a");
-        link.download = "data-receipt.png";
+        link.download = `data_receipt_${Date.now()}.png`;
         link.href = canvas.toDataURL();
         link.click();
       });
     }
-  </script>
 
+    function shareReceipt() {
+      const receiptEl = document.getElementById("receipt");
+      html2canvas(receiptEl).then(canvas => {
+        canvas.toBlob(blob => {
+          const file = new File([blob], "data receipt.png", { type: "image/png" });
+
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({
+              files: [file],
+              title: "Freenium Data Receipt",
+              text: "Here's your data receipt from Freenium Data."
+            }).catch(err => console.error("Sharing failed:", err));
+          } else {
+            alert("❌ Your device doesn't support sharing this receipt.");
+          }
+        });
+      });
+    }
+  </script>
 </body>
 </html>
