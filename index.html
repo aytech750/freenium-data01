@@ -163,18 +163,23 @@ if (prefillRef) {
     try {
       const cred = await auth.createUserWithEmailAndPassword(email, password);
       const uid = cred.user.uid;
-      const userData = {
-        fullName,
-        email,
-        phone,
-        wallet: 0,
-        rewards: 0,
-        referrals: [],
-        referredBy: referrerCode || null,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      };
+      const fullName = document.getElementById("signupName").value;
+// ...
+const userData = {
+  name: fullName,  // ✅ use `name` key instead of `fullName`
+  email,
+  phone,
+  wallet: 0,
+  rewards: 0,
+  referrals: [],
+  referredBy: referrerCode || null,
+  createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+};
+
 
      await db.collection("users").doc(uid).set(userData);
+     await cred.user.updateProfile({ displayName: fullName });
+
 
 // ✅ Send verification email
 await cred.user.sendEmailVerification();
