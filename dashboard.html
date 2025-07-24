@@ -256,9 +256,9 @@ console.log("Transaction Timestamp:", tx.timestamp);
   
   // Redirect to specific receipt page
   if (type.toLowerCase().includes("data")) {
-    window.location.href = "data-receipt.html";
+    window.location.href = `data-receipt.html?reference=${tx.reference}`;
   } else if (type.toLowerCase().includes("airtime")) {
-    window.location.href = "airtime-receipt.html";
+    window.location.href = `airtime-receipt.html?reference=${tx.reference}`;
   } else if (type.toLowerCase().includes("electricity")) {
     window.location.href = "electricity-receipt.html";
   } else if (type.toLowerCase().includes("tv") || type.toLowerCase().includes("gotv") || type.toLowerCase().includes("dstv")) {
