@@ -64,45 +64,43 @@
         return;
       }
 
-      const userData = userSnap.data();
-      let rewards = userData.rewards || 0;
-      rewardAmount.innerText = `₦${rewards}`;
-      withdrawBtn.disabled = rewards <= 0;
+const userData = userSnap.data();
+let rewards = userData.rewards || 0;
+rewardAmount.innerText = `₦${rewards}`;
+withdrawBtn.disabled = rewards < 25; // 🔄 Enable after one referral reward
 
-      const referrals = userData.referrals || [];
-      const referralCount = referrals.length;
-      const earnedFromReferrals = referralCount * 25;
+const referrals = userData.referrals || [];
+const referralCount = referrals.length;
+referralMsg.innerText = `You've referred ${referralCount} friend(s). You've earned ₦${rewards}.`; // ✅ Use rewards not referrals × 25
 
-      referralMsg.innerText = `You've referred ${referralCount} friend(s). You've earned ₦${earnedFromReferrals}.`;
+withdrawBtn.addEventListener("click", async () => {
+  if (rewards < 25) {
+    alert("You must earn at least ₦25 before withdrawing.");
+    return;
+  }
 
-      withdrawBtn.addEventListener("click", async () => {
-        if (rewards <= 0) {
-          alert("No rewards to withdraw.");
-          return;
-        }
+  const confirmWithdraw = confirm(`Withdraw ₦${rewards} to your wallet?`);
+  if (!confirmWithdraw) return;
 
-        const confirmWithdraw = confirm(`Withdraw ₦${rewards} to your wallet?`);
-        if (!confirmWithdraw) return;
+  withdrawBtn.disabled = true;
+  withdrawBtn.innerText = "Processing...";
 
-        withdrawBtn.disabled = true;
-        withdrawBtn.innerText = "Processing...";
+  try {
+    await updateDoc(userRef, {
+      wallet: increment(rewards),
+      rewards: 0, // Reset reward
+    });
 
-        try {
-          await updateDoc(userRef, {
-            wallet: increment(rewards),
-            rewards: 0,
-          });
-
-          rewardAmount.innerText = "₦0";
-          withdrawBtn.innerText = "Withdraw Rewards";
-          alert("✅ Successfully withdrawn to your wallet!");
-        } catch (err) {
-          console.error("Withdraw error:", err);
-          alert("❌ An error occurred. Please try again.");
-          withdrawBtn.disabled = false;
-          withdrawBtn.innerText = "Withdraw Rewards";
-        }
-      });
+    rewardAmount.innerText = "₦0";
+    withdrawBtn.innerText = "Withdraw Rewards";
+    alert("✅ Successfully withdrawn to your wallet!");
+  } catch (err) {
+    console.error("Withdraw error:", err);
+    alert("❌ An error occurred. Please try again.");
+    withdrawBtn.disabled = false;
+    withdrawBtn.innerText = "Withdraw Rewards";
+  }
+});
     });
   </script>
 </body>

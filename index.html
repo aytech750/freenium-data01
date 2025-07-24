@@ -183,34 +183,28 @@ const userData = {
 
 // ✅ Send verification email
 await cred.user.sendEmailVerification();
-
 if (referrerCode) {
   const refDoc = await db.collection("users").doc(referrerCode).get();
-if (refDoc.exists) {
-  try {
-    const refData = refDoc.data();
-    const currentReferrals = Array.isArray(refData.referrals) ? refData.referrals.length : 0;
-    const newReferralCount = currentReferrals + 1;
-
-    const updates = {
-      referrals: firebase.firestore.FieldValue.arrayUnion(uid)
-    };
-
-    // 🧠 Reward ₦50 only if new count is a multiple of 2
-    if (newReferralCount % 2 === 0) {
-      updates.rewards = firebase.firestore.FieldValue.increment(50);
+  if (refDoc.exists) {
+    try {
+      await db.collection("users").doc(referrerCode).update({
+        referrals: firebase.firestore.FieldValue.arrayUnion(uid),
+        rewards: firebase.firestore.FieldValue.increment(25)
+      });
+      console.log("✅ Referrer rewarded ₦25 for new signup");
+    } catch (error) {
+      console.error("❌ Failed to update referrer:", error.message);
     }
-
-    await db.collection("users").doc(referrerCode).update(updates);
-    console.log("Referrer updated successfully with logic for every 2 referrals");
-  } catch (error) {
-    console.error("Failed to update referrer:", error.message);
+  } else {
+    console.warn("⚠️ Referrer not found:", referrerCode);
   }
 }
- else {
-  console.warn("Referrer not found:", referrerCode);
+if (referrerCode && referrerCode.length < 10) {
+  showToast("Invalid referral code format", "#f44336");
+  loadingSpinner.classList.add("hidden");
+  return;
 }
-}
+
 
 showToast("Signup successful 🎉 Check your email to verify your account!");
 window.location.href = "verify.html"; // Redirect them to a verification info page

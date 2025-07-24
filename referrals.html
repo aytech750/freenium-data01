@@ -20,9 +20,10 @@
 
       </div>
 
-    <p class="referral-note">
-  Share this code with your friends and earn ₦50 for every 2 successful sign-ups!
+   <p class="referral-note">
+  Share this code with your friends and earn <strong>₦25</strong> for every successful sign-up!
 </p>
+
 
      <div class="referral-stats">
   <p>People Referred</p>
@@ -102,13 +103,11 @@
         // 👇 Now using UID directly as the referral code
         referralInput.value = uid;
        referralStats.innerText = referrals.length;
-const rewardAmount = referrals.length * 25;
-const nextTarget = 25 * (referrals.length + 1);
-const progressText = `Earn ₦25 per referral! Next target: ₦${nextTarget}`;
-
+       const rewardAmount = userData.rewards || 0;
 
 document.getElementById("referralReward").innerText = rewardAmount;
-document.getElementById("referralProgress").innerText = progressText;
+document.getElementById("referralProgress").innerText = `You earn ₦25 instantly for each referral. Keep going!`;
+
        } else {
         console.warn("⚠️ User document not found.");
       }
