@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Data Receipt - Freenium Data</title>
+  <title>Airtime Receipt - Freenium Data</title>
   <link rel="icon" href="https://i.imgur.com/KTBvgla.png" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -88,26 +89,25 @@
       font-size: 12px;
       color: #999;
     }
-
-    .success-icon {
+      .success-icon {
       font-size: 40px;
       color: green;
       text-align: center;
     }
+
   </style>
 </head>
 <body>
   <div id="receipt" class="receipt-container">
     <img src="https://i.imgur.com/KTBvgla.png" alt="Freenium Data" class="logo" />
-    <h2>📄 Data Purchase Receipt</h2>
-    <div class="success-icon">
+    <h2>📄 Airtime Purchase Receipt</h2>
+     <div class="success-icon">
       <i class="fas fa-check-circle"></i>
     </div>
     <div class="status-badge" id="statusBadge">Successful</div>
 
     <div class="receipt-details">
       <p><strong>Network:</strong> <span id="network">...</span></p>
-      <p><strong>Plan:</strong> <span id="plan">...</span></p>
       <p><strong>Phone Number:</strong> <span id="phone">...</span></p>
       <p><strong>Amount:</strong> ₦<span id="amount">...</span></p>
       <p><strong>Reference:</strong> <span id="reference">...</span></p>
@@ -127,7 +127,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://kit.fontawesome.com/4f3b8bcba4.js" crossorigin="anonymous"></script>
 
   <script>
     const firebaseConfig = {
@@ -143,6 +142,7 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // Pull data from sessionStorage (used from dashboard click)
     const tx = JSON.parse(sessionStorage.getItem("selectedTransaction") || "{}");
 
     if (!tx.reference) {
@@ -150,7 +150,6 @@
       window.location.href = "dashboard.html";
     } else {
       document.getElementById("network").textContent = tx.network || "N/A";
-      document.getElementById("plan").textContent = tx.plan || "N/A";
       document.getElementById("phone").textContent = tx.phone || "N/A";
       document.getElementById("amount").textContent = tx.amount || "0.00";
       document.getElementById("reference").textContent = tx.reference;
@@ -162,7 +161,7 @@
       const receiptEl = document.getElementById("receipt");
       html2canvas(receiptEl).then(canvas => {
         const link = document.createElement("a");
-        link.download = `data_receipt_${Date.now()}.png`;
+        link.download = `airtime_receipt_${Date.now()}.png`;
         link.href = canvas.toDataURL();
         link.click();
       });
@@ -172,13 +171,13 @@
       const receiptEl = document.getElementById("receipt");
       html2canvas(receiptEl).then(canvas => {
         canvas.toBlob(blob => {
-          const file = new File([blob], "data receipt.png", { type: "image/png" });
+          const file = new File([blob], "airtime receipt.png", { type: "image/png" });
 
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
             navigator.share({
               files: [file],
-              title: "Freenium Data Receipt",
-              text: "Here's your data receipt from Freenium Data."
+              title: "Freenium Airtime Receipt",
+              text: "Here's your airtime receipt from Freenium Data."
             }).catch(err => console.error("Sharing failed:", err));
           } else {
             alert("❌ Your device doesn't support sharing this receipt.");
